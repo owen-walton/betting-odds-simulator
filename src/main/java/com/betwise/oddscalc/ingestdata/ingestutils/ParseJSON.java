@@ -6,10 +6,7 @@
  */
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class ParseJSON {
 
@@ -18,7 +15,29 @@ public final class ParseJSON {
         return false;
     }
 
+    public Object getValueFromMap(String keyPath, Map<String, Object> map) {
+        // gets the value where the key follows the path provided
+        Object current = map;
+
+        for(String key : keyPath.split("/")) {
+            if (!(current instanceof Map)) {
+                // key path is invalid
+                return null;
+            }
+            current = ((Map<String, Object>) current).get(key);
+        }
+        return current;
+    }
+
     public Map<String, Object> parseJsonToMap(String jsonStr) {
+        return parseJsonToMap(jsonStr, new HashSet<>(), "");
+    }
+
+    public Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths) {
+        return parseJsonToMap(jsonStr, ignoredKeyPaths, "");
+    }
+
+    private Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths, String currentPath) {
         Map<String, Object> jsonMap = new HashMap<>();
         boolean endOfString = false;
         jsonStr = removeWhiteSpace(jsonStr);
@@ -30,7 +49,10 @@ public final class ParseJSON {
                     // parse object will only return a map with size 1, hence it has parsed 1 object
                     // substring is exclusive so add 1 to end index
                     int objectEndIndex = getObjectEndIndex(jsonStr, 0);
-                    jsonMap.putAll(parseObject(jsonStr.substring(0, objectEndIndex + 1)));
+                    Map<String, Object> parsedObj = parseObject(jsonStr.substring(0, objectEndIndex + 1), ignoredKeyPaths, currentPath);
+                    if (parsedObj != null) {
+                        jsonMap.putAll(parsedObj);
+                    }
 
                     // parsed data must be removed from string
                     // object end index points to the value before the comma
@@ -95,7 +117,7 @@ public final class ParseJSON {
         }
     }
 
-    private Map<String, Object> parseObject(String jsonObjectStr) {
+    private Map<String, Object> parseObject(String jsonObjectStr, Set<String> ignoredKeyPaths, String currentPath) {
 
         // Method returns single map entry of 1 object and all inner objects are nested in that entry
         // so map size should always be 1
@@ -106,12 +128,18 @@ public final class ParseJSON {
 
         // parse key
         key = parseKey(jsonObjectStr);
+        String fullPath = currentPath.isEmpty() ? key : currentPath + "/" + key;
+
+        // ignore this object entirely if matched with ignoredKeyPaths
+        if (ignoredKeyPaths.contains(fullPath)) {
+            return null;
+        }
 
         // shorten string to not include the key or colon at beginning
         jsonObjectStr = jsonObjectStr.substring(findNextNonEscapedIndex(jsonObjectStr, 0, ':') + 1);
 
         // now parse the value(s) of object
-        value = parseValue(jsonObjectStr);
+        value = parseValue(jsonObjectStr, ignoredKeyPaths, fullPath);
 
         objectMap = new HashMap<>();
         objectMap.put(key, value);
@@ -127,12 +155,12 @@ public final class ParseJSON {
 
     // requires a string beginning with the value not key (remove key and colon from start)
     // however can have more data on end
-    private Object parseValue(String jsonValueStr) {
+    private Object parseValue(String jsonValueStr, Set<String> ignoredKeyPaths, String currentPath) {
         Object value;
         switch (jsonValueStr.charAt(0)) {
             case '"' -> value = jsonValueStr.substring(1, findNextNonEscapedIndex(jsonValueStr, 1, '"'));
             case '[' -> value = parseJsonArr(findBracketEnclosedString(jsonValueStr, 0, ']'));
-            case '{' -> value = parseJsonToMap(findBracketEnclosedString(jsonValueStr, 0, '}'));
+            case '{' -> value = parseJsonToMap(findBracketEnclosedString(jsonValueStr, 0, '}'), ignoredKeyPaths, currentPath);
             // for primitive values
             default -> {
                 if (jsonValueStr.startsWith("true")) {
@@ -148,6 +176,12 @@ public final class ParseJSON {
         }
         return value;
     }
+
+    // array parsing uses parseValue but doesn't require key path ignoring so it may call this wrapper
+    private Object parseValue(String jsonValueStr) {
+        return parseValue(jsonValueStr, new HashSet<>(), "");
+    }
+
 
     private Object parseNumber(String json, int startIndex) {
         int decimalCount = 0;

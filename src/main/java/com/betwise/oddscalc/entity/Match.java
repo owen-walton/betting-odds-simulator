@@ -1,29 +1,28 @@
 package com.betwise.oddscalc.entity;
 
-import java.util.Arrays;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Map;
 
 public class Match {
 
     private MatchFormat format;
-    private Date startDate;
+    private LocalDate startDate;
     private int matchLengthInDays;
     private Venue venue;
     private Map<Team, HomeStatus> teams;
-    private Team tossWinner;
+    private MatchResult matchResult;
 
     public Match() {
     }
 
-    public Match(MatchFormat format, Date startDate, int matchLengthInDays,
-                 Venue venue, Map<Team, HomeStatus> teams, Team tossWinner) {
+    public Match(MatchFormat format, LocalDate startDate, int matchLengthInDays,
+                 Venue venue, Map<Team, HomeStatus> teams, MatchResult matchResult) {
         this.format = format;
         this.startDate = startDate;
         this.matchLengthInDays = matchLengthInDays;
         this.venue = venue;
         this.teams = teams;
-        this.tossWinner = tossWinner;
+        this.matchResult = matchResult;
     }
 
     public MatchFormat getFormat() {
@@ -34,11 +33,11 @@ public class Match {
         this.format = format;
     }
 
-    public Date getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
@@ -66,12 +65,12 @@ public class Match {
         this.teams = teams;
     }
 
-    public Team getTossWinner() {
-        return tossWinner;
+    public MatchResult getMatchResult() {
+        return this.matchResult;
     }
 
-    public void setTossWinner(Team tossWinner) {
-        this.tossWinner = tossWinner;
+    public void setMatchResult(MatchResult matchResult) {
+        this.matchResult = matchResult;
     }
 
 }
