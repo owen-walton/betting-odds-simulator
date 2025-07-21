@@ -6,5 +6,6 @@ public record MatchResult(
         int tossWinningTeamID,
         TossDecision tossDecision,
         Integer marginSize, // nullable for draw/no result
-        MarginType marginType
+        MarginType marginType,
+        Result result
 ) { }

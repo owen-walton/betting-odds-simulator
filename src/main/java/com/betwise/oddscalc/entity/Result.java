@@ -1,7 +1,7 @@
 package com.betwise.oddscalc.entity;
 
-public enum MarginType {
-    RUNS, WICKETS;
+public enum Result {
+    WIN, DRAW, NO_RESULT;
 
     @Override
     // toString where "_" is a space and each word is title case

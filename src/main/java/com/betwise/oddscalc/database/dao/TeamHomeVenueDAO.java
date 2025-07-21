@@ -1,4 +1,42 @@
 package com.betwise.oddscalc.database.dao;
 
-public class TeamHomeVenueDAO {
+import com.betwise.oddscalc.database.connection.DBConnection;
+import com.betwise.oddscalc.entity.TeamHomeVenue;
+
+import java.sql.PreparedStatement;
+
+public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable {
+
+    private DBConnection dbConnection;
+
+    // initialise connection
+    public TeamHomeVenueDAO() {
+        this.dbConnection = new DBConnection();
+        this.dbConnection.connect();
+        if (!this.dbConnection.isConnected()) {
+            throw new RuntimeException("Database connection failed");
+        }
+    }
+
+    @Override
+    public boolean insert(TeamHomeVenue teamHomeVenue) {
+        String sql = "INSERT INTO TeamHomeVenue (TeamID, VenueID) VALUES (?, ?)";
+
+        try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
+            statement.setInt(1, teamHomeVenue.teamID());
+            statement.setInt(2, teamHomeVenue.venueID());
+
+            statement.executeUpdate();
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public void close() {
+        dbConnection.disconnect();
+    }
 }

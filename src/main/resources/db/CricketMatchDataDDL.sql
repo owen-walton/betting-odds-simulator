@@ -54,7 +54,7 @@ CREATE TABLE CricketMatchData.MatchResult
     WinningTeamID INT, -- if draw or no result then nullable
     TossWinningTeamID INT NOT NULL,
     TossDecision ENUM('Bat', 'Field') NOT NULL,
-    Result ENUM('Win', 'Draw', 'No result'),
+    Result ENUM('Win', 'Draw', 'No Result'),
     MarginSize INT, -- how many runs/wickets won by
     MarginType ENUM('Wickets', 'Runs'),
     FOREIGN KEY (MatchID) REFERENCES CricketMatchData.CricketMatch(MatchID),
