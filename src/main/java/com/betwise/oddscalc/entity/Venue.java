@@ -1,4 +1,4 @@
 package com.betwise.oddscalc.entity;
 
-public record Venue(String ground, String city) {
+public record Venue(int venueID, String ground, String city) {
 }
