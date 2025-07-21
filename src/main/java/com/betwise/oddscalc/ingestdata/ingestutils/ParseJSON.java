@@ -10,12 +10,15 @@ import java.util.*;
 
 public final class ParseJSON {
 
+    private ParseJSON() {
+    }
+
     // ensureSyntax is incomplete
-    public boolean ensureSyntax(String jsonString) {
+    private static boolean ensureSyntax(String jsonString) {
         return false;
     }
 
-    public Object getValueFromMap(String keyPath, Map<String, Object> map) {
+    public static Object getValueFromMap(String keyPath, Map<String, Object> map) {
         // gets the value where the key follows the path provided
         Object current = map;
 
@@ -29,15 +32,15 @@ public final class ParseJSON {
         return current;
     }
 
-    public Map<String, Object> parseJsonToMap(String jsonStr) {
+    public static Map<String, Object> parseJsonToMap(String jsonStr) {
         return parseJsonToMap(jsonStr, new HashSet<>(), "");
     }
 
-    public Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths) {
+    public static Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths) {
         return parseJsonToMap(jsonStr, ignoredKeyPaths, "");
     }
 
-    private Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths, String currentPath) {
+    private static Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths, String currentPath) {
         Map<String, Object> jsonMap = new HashMap<>();
         boolean endOfString = false;
         jsonStr = removeWhiteSpace(jsonStr);
@@ -72,7 +75,7 @@ public final class ParseJSON {
     }
 
     // wrapper of getValueEndIndex to allow end index to be found when a key is present
-    private int getObjectEndIndex(String json, int startIndex) {
+    private static int getObjectEndIndex(String json, int startIndex) {
 
         if (startIndex < json.length()) {
             // checks string begins with quote as expected
@@ -87,7 +90,7 @@ public final class ParseJSON {
         return -1;
     }
 
-    private int getValueEndIndex(String jsonStr, int startIndex) {
+    private static int getValueEndIndex(String jsonStr, int startIndex) {
         switch (jsonStr.charAt(startIndex)) {
             case '"' -> {
                 int nextCommaIndex = findNextNonEscapedIndex(jsonStr, startIndex, ',');
@@ -117,7 +120,7 @@ public final class ParseJSON {
         }
     }
 
-    private Map<String, Object> parseObject(String jsonObjectStr, Set<String> ignoredKeyPaths, String currentPath) {
+    private static Map<String, Object> parseObject(String jsonObjectStr, Set<String> ignoredKeyPaths, String currentPath) {
 
         // Method returns single map entry of 1 object and all inner objects are nested in that entry
         // so map size should always be 1
@@ -146,7 +149,7 @@ public final class ParseJSON {
         return objectMap;
     }
 
-    private String parseKey(String jsonObjectStr) {
+    private static String parseKey(String jsonObjectStr) {
         // start at index 1 to avoid function finding the first quote mark
         int outerQuoteMarkIndex = findNextNonEscapedIndex(jsonObjectStr, 1, '"');
         // find name of object without including quote marks
@@ -155,7 +158,7 @@ public final class ParseJSON {
 
     // requires a string beginning with the value not key (remove key and colon from start)
     // however can have more data on end
-    private Object parseValue(String jsonValueStr, Set<String> ignoredKeyPaths, String currentPath) {
+    private static Object parseValue(String jsonValueStr, Set<String> ignoredKeyPaths, String currentPath) {
         Object value;
         switch (jsonValueStr.charAt(0)) {
             case '"' -> value = jsonValueStr.substring(1, findNextNonEscapedIndex(jsonValueStr, 1, '"'));
@@ -178,12 +181,12 @@ public final class ParseJSON {
     }
 
     // array parsing uses parseValue but doesn't require key path ignoring so it may call this wrapper
-    private Object parseValue(String jsonValueStr) {
+    private static Object parseValue(String jsonValueStr) {
         return parseValue(jsonValueStr, new HashSet<>(), "");
     }
 
 
-    private Object parseNumber(String json, int startIndex) {
+    private static Object parseNumber(String json, int startIndex) {
         int decimalCount = 0;
         int eCount = 0;
         int dashCount = 0;
@@ -226,7 +229,7 @@ public final class ParseJSON {
         }
     }
 
-    private Object parseJsonArr(String jsonArrStr) {
+    private static Object parseJsonArr(String jsonArrStr) {
 
         List<Object> arrayList = new ArrayList<>();
 
@@ -245,7 +248,7 @@ public final class ParseJSON {
         return arrayList;
     }
 
-    private int findNextNonEscapedIndex(String str, int startIndex, char value) {
+    private static int findNextNonEscapedIndex(String str, int startIndex, char value) {
         boolean inQuotes = false; // function assumes not already in quotes (start index must not be in quotes)
 
         for (int i = startIndex; i < str.length(); i++) {
@@ -262,7 +265,7 @@ public final class ParseJSON {
         return -1;
     }
 
-    private boolean isEscaped(String str, int index) {
+    private static boolean isEscaped(String str, int index) {
 
         int numOfEscapes = 0;
 
@@ -275,11 +278,11 @@ public final class ParseJSON {
         return numOfEscapes % 2 == 1;
     }
 
-    private String findBracketEnclosedString(String str, int startIndex, char close) {
+    private static String findBracketEnclosedString(String str, int startIndex, char close) {
         return str.substring(startIndex + 1, findCloseBracket(str, startIndex, close));
     }
 
-    private int findCloseBracket(String str, int startIndex, char close) {
+    private static int findCloseBracket(String str, int startIndex, char close) {
         char open = str.charAt(startIndex);
         int openStatements = 0;
         int index = startIndex;
@@ -298,12 +301,12 @@ public final class ParseJSON {
         return index;
     }
 
-    private String stripOuterBrackets(String str) {
+    private static String stripOuterBrackets(String str) {
         return str.substring(1, str.length() - 1);
     }
 
     // will not work on half of a string if a quote is missing from first half (only use on full strings)
-    private String removeWhiteSpace(String str) {
+    private static String removeWhiteSpace(String str) {
         boolean inQuotes = false;
         StringBuilder newStr = new StringBuilder();
 

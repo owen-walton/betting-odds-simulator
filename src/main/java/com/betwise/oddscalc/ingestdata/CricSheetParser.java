@@ -1,17 +1,12 @@
 package com.betwise.oddscalc.ingestdata;
 
 
-import com.betwise.oddscalc.entity.Match;
-import com.betwise.oddscalc.entity.MatchFormat;
-import com.betwise.oddscalc.entity.Venue;
+import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.FileReadHelper;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CricSheetParser {
 
@@ -20,28 +15,24 @@ public class CricSheetParser {
     private final String JSON_EXTENSION = ".json";
     private final List<Venue> venueList = new ArrayList<>();
 
-    public CricSheetParser() {
-
-    }
-
     public void parseInternationalMatches() {
 
         List<String> internationalMatchIDs = getInternationalMatchIDs();
-        List<Match> internationalMatches = new ArrayList<>();
-        ParseJSON jsonParser = new ParseJSON();
+        List<CricketMatch> internationalMatches = new ArrayList<>();
 
         for (String matchID : internationalMatchIDs) {
-            internationalMatches.add(getMatchData(matchID, jsonParser));
+            internationalMatches.add(getMatchData(matchID));
         }
     }
 
-    public Match getMatchData(String matchID, ParseJSON jsonParser) {
+    public CricketMatch getMatchData(String matchID) {
 
         String szMatchJson = joinStringList(FileReadHelper.readZipFromResources(CRICSHEET_PATH, matchID + JSON_EXTENSION));
-        Map<String, Object> matchMap = jsonParser.parseJsonToMap(szMatchJson, Set.of("innings"));
+        // ignore unused 'innings' and 'meta' to save computation
+        Map<String, Object> matchMap = ParseJSON.parseJsonToMap(szMatchJson, Set.of("innings", "meta"));
 
-        List<String> matchDates = (List<String>) jsonParser.getValueFromMap("info/dates", matchMap);
-        String[] venue = ((String) jsonParser.getValueFromMap("info/venue", matchMap)).split(",");
+        List<String> matchDates = (List<String>) ParseJSON.getValueFromMap("info/dates", matchMap);
+        String[] venue = ((String) ParseJSON.getValueFromMap("info/venue", matchMap)).split(",");
         String ground = venue[0].trim();
         String city;
 
@@ -49,11 +40,11 @@ public class CricSheetParser {
         if(venue.length == 2) {
             city = venue[1].trim();
         } else { // otherwise just take city from
-            city = (String) jsonParser.getValueFromMap("info/city", matchMap);
+            city = (String) ParseJSON.getValueFromMap("info/city", matchMap);
         }
 
-        Match match = new Match(
-                MatchFormat.fromString((String) jsonParser.getValueFromMap("info/match_type", matchMap)),
+        CricketMatch match = new CricketMatch(
+                MatchFormat.fromString((String) ParseJSON.getValueFromMap("info/match_type", matchMap)),
                 LocalDate.parse(matchDates.get(0)),
                 matchDates.size(),
                 queryVenueList(ground, city),
@@ -62,6 +53,28 @@ public class CricSheetParser {
         );
 
         return match;
+    }
+
+    // unfinished at determining home team
+    public Map<String, HomeStatus> getTeamsAndHomeStatus(Map<String, Object> matchMap) {
+
+        Map<String, HomeStatus> teamHomeStatusMap = new HashMap<>();
+        String[] teams = ((List<String>)ParseJSON.getValueFromMap("info/teams", matchMap)).toArray(new String[0]);
+
+        // if event is a tour, home team is implied
+        String eventName = ((String)ParseJSON.getValueFromMap("info/event/name", matchMap));
+        if (eventName.contains(" tour of ")) {
+            if (eventName.split(" ")[0].trim().equalsIgnoreCase(teams[0].trim())) {
+                teamHomeStatusMap.put(teams[0], HomeStatus.HOME);
+                teamHomeStatusMap.put(teams[1], HomeStatus.AWAY);
+                return teamHomeStatusMap;
+            } else if (eventName.split(" ")[0].equalsIgnoreCase(teams[1])) {
+                teamHomeStatusMap.put(teams[1], HomeStatus.HOME);
+                teamHomeStatusMap.put(teams[0], HomeStatus.AWAY);
+                return teamHomeStatusMap;
+            }
+        }
+        return null;
     }
 
     public String joinStringList(List<String> list) {

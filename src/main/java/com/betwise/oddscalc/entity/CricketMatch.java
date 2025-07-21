@@ -3,20 +3,20 @@ package com.betwise.oddscalc.entity;
 import java.time.LocalDate;
 import java.util.Map;
 
-public class Match {
+public class CricketMatch {
 
+    private int matchID;
     private MatchFormat format;
+    private int venueID;
     private LocalDate startDate;
-    private int matchLengthInDays;
-    private Venue venue;
-    private Map<Team, HomeStatus> teams;
+    private Map<String, HomeStatus> teams;
     private MatchResult matchResult;
 
-    public Match() {
+    public CricketMatch() {
     }
 
-    public Match(MatchFormat format, LocalDate startDate, int matchLengthInDays,
-                 Venue venue, Map<Team, HomeStatus> teams, MatchResult matchResult) {
+    public CricketMatch(MatchFormat format, LocalDate startDate, int matchLengthInDays,
+                        Venue venue, Map<String, HomeStatus> teams, MatchResult matchResult) {
         this.format = format;
         this.startDate = startDate;
         this.matchLengthInDays = matchLengthInDays;
@@ -57,11 +57,11 @@ public class Match {
         this.venue = venue;
     }
 
-    public Map<Team, HomeStatus> getTeams() {
+    public Map<String, HomeStatus> getTeams() {
         return teams;
     }
 
-    public void setTeams(Map<Team, HomeStatus> teams) {
+    public void setTeams(Map<String, HomeStatus> teams) {
         this.teams = teams;
     }
 
