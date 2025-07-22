@@ -40,10 +40,12 @@ CREATE TABLE CricketMatchData.TeamHomeVenue
 -- MATCH is a reserved sql keyword
 CREATE TABLE CricketMatchData.CricketMatch
 (
-    MatchID INT AUTO_INCREMENT PRIMARY KEY,
+    MatchID INT NOT NULL,
+    DataSource ENUM('CRICSHEET') NOT NULL,
     FormatName VARCHAR(10) NOT NULL,
     VenueID INT NOT NULL,
     StartDate DATE NOT NULL,
+    PRIMARY KEY (MatchID, DataSource),
     FOREIGN KEY (FormatName) REFERENCES CricketMatchData.MatchFormat(FormatName),
     FOREIGN KEY (VenueID) REFERENCES CricketMatchData.Venue(VenueID)
 );

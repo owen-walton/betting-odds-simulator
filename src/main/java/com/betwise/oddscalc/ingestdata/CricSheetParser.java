@@ -15,22 +15,23 @@ public class CricSheetParser {
     private final String JSON_EXTENSION = ".json";
     private final List<Venue> venueList = new ArrayList<>();
 
-    public void parseInternationalMatches() {
-
+    public CricketMatchDataSchema parseInternationalMatches() {
+        CricketMatchDataSchema internationalCricketData = new CricketMatchDataSchema();
         List<String> internationalMatchIDs = getInternationalMatchIDs();
-        List<CricketMatch> internationalMatches = new ArrayList<>();
 
         for (String matchID : internationalMatchIDs) {
-            internationalMatches.add(getMatchData(matchID));
+
         }
+
+        return internationalCricketData;
     }
 
     public CricketMatch getMatchData(String matchID) {
-
         String szMatchJson = joinStringList(FileReadHelper.readZipFromResources(CRICSHEET_PATH, matchID + JSON_EXTENSION));
         // ignore unused 'innings' and 'meta' to save computation
         Map<String, Object> matchMap = ParseJSON.parseJsonToMap(szMatchJson, Set.of("innings", "meta"));
 
+        /*
         List<String> matchDates = (List<String>) ParseJSON.getValueFromMap("info/dates", matchMap);
         String[] venue = ((String) ParseJSON.getValueFromMap("info/venue", matchMap)).split(",");
         String ground = venue[0].trim();
@@ -52,7 +53,7 @@ public class CricSheetParser {
                 null
         );
 
-        return match;
+        return match;*/
     }
 
     // unfinished at determining home team
