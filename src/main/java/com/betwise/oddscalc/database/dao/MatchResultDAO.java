@@ -21,37 +21,39 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
     @Override
     public boolean insert(MatchResult matchResult) {
         String sql = "INSERT INTO MatchResult " +
-                "(MatchID, WinningTeamID, TossWinningTeamID, TossDecision, Result, MarginSize, MarginType)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "(MatchID, DataSource, WinningTeamID, TossWinningTeamID, TossDecision, Result, MarginSize, MarginType)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
             statement.setInt(1, matchResult.getMatchID());
 
+            statement.setString(2, matchResult.getDataSource().name());
+
             if (matchResult.getWinningTeamID() != null) {
-                statement.setInt(2, matchResult.getWinningTeamID());
+                statement.setInt(3, matchResult.getWinningTeamID());
             } else {
-                statement.setNull(2, java.sql.Types.INTEGER);
+                statement.setNull(3, java.sql.Types.INTEGER);
             }
 
-            statement.setInt(3, matchResult.getTossWinningTeamID());
-            statement.setString(4, matchResult.getTossDecision().toString());
+            statement.setInt(4, matchResult.getTossWinningTeamID());
+            statement.setString(5, matchResult.getTossDecision().toString());
 
             if (matchResult.getResult() != null) {
-                statement.setString(5, matchResult.getResult().toString());
+                statement.setString(6, matchResult.getResult().toString());
             } else {
-                statement.setNull(5, java.sql.Types.VARCHAR);
+                statement.setNull(6, java.sql.Types.VARCHAR);
             }
 
             if (matchResult.getMarginSize() != null) {
-                statement.setInt(6, matchResult.getMarginSize());
+                statement.setInt(7, matchResult.getMarginSize());
             } else {
-                statement.setNull(6, java.sql.Types.INTEGER);
+                statement.setNull(7, java.sql.Types.INTEGER);
             }
 
             if (matchResult.getMarginType() != null) {
-                statement.setString(7, matchResult.getMarginType().toString());
+                statement.setString(8, matchResult.getMarginType().toString());
             } else {
-                statement.setNull(7, java.sql.Types.VARCHAR);
+                statement.setNull(8, java.sql.Types.VARCHAR);
             }
 
             statement.executeUpdate();

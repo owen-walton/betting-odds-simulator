@@ -21,12 +21,13 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
     @Override
     public boolean insert(MatchTeam matchTeam) {
         String sql = "INSERT INTO MatchTeam " +
-                "(MatchID, TeamID) " +
-                "VALUES (?, ?)";
+                "(MatchID, DataSource, TeamID) " +
+                "VALUES (?, ?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
             statement.setInt(1, matchTeam.getMatchID());
-            statement.setInt(2, matchTeam.getTeamID());
+            statement.setString(2, matchTeam.getDataSource().name());
+            statement.setInt(3, matchTeam.getTeamID());
 
             statement.executeUpdate();
             return true;

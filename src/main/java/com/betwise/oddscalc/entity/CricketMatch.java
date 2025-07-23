@@ -27,11 +27,11 @@ public class CricketMatch {
         this.matchID = matchID;
     }
 
-    public String getFormat() {
+    public String getFormatName() {
         return formatName;
     }
 
-    public void setFormat(String formatName) {
+    public void setFormatName(String formatName) {
         this.formatName = formatName;
     }
 

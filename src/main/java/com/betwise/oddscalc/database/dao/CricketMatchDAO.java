@@ -20,14 +20,15 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
 
     @Override
     public boolean insert(CricketMatch cricketMatch) {
-        String sql = "INSERT INTO CricketMatch (FormatName, DataSource, VenueID, StartDate) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO CricketMatch (MatchID, DataSource, FormatName, VenueID, StartDate) VALUES (?, ?, ?, ?, ?)";
 
         // use prepared statement for SQL safety
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setString(1, cricketMatch.getFormat().formatName()); // Assuming enum name matches FormatName
+            statement.setInt(1, cricketMatch.getMatchID());
             statement.setString(2, cricketMatch.getDataSource().name());
-            statement.setInt(3, cricketMatch.getVenueID());
-            statement.setDate(4, java.sql.Date.valueOf(cricketMatch.getStartDate()));
+            statement.setString(3, cricketMatch.getFormatName()); // Assuming enum name matches FormatName
+            statement.setInt(4, cricketMatch.getVenueID());
+            statement.setDate(5, java.sql.Date.valueOf(cricketMatch.getStartDate()));
             statement.executeUpdate();
             return true;
         } catch (Exception e) {
