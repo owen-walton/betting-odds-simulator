@@ -30,14 +30,17 @@ public class IngestionService {
                 MatchTeamDAO matchTeamDAO = new MatchTeamDAO()
         ) {
             // insert teams and venues
-            List<Team> teams = teamDAO.bulkInsertIfNotExists(schema.getTeams());
+            teamDAO.bulkInsertIfNotExists(schema.getTeams());
+            List<Team> teams = teamDAO.getIDsIntoObjects(schema.getTeams());
             for (Team team : teams) {
                 schema.updateTeamKey(team);
             }
-            List<Venue> venues = venueDAO.bulkInsertIfNotExists(schema.getVenues());
+            venueDAO.bulkInsertIfNotExists(schema.getVenues());
+            List<Venue> venues = venueDAO.getIDsIntoObjects(schema.getVenues());
             for (Venue venue : venues) {
                 schema.updateVenueKey(venue);
             }
+
             matchDAO.bulkInsertIfNotExists(schema.getCricketMatches());
             resultDAO.bulkInsertIfNotExists(schema.getMatchResults());
             matchTeamDAO.bulkInsertIfNotExists(schema.getMatchTeams());

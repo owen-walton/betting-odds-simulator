@@ -5,6 +5,12 @@ public class Venue {
     private String groundName;
     private String city;
 
+    public Venue() {
+        this.venueID = -1;
+        this.groundName = null;
+        this.city = null;
+    }
+
     public Venue(int venueID, String groundName, String city) {
         this.venueID = venueID;
         this.groundName = groundName;

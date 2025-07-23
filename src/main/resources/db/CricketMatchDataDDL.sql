@@ -52,14 +52,16 @@ CREATE TABLE CricketMatchData.CricketMatch
 
 CREATE TABLE CricketMatchData.MatchResult
 (
-    MatchID INT PRIMARY KEY,
+    MatchID INT,
+    DataSource ENUM('CRICSHEET'),
     WinningTeamID INT, -- if draw or no result then nullable
     TossWinningTeamID INT NOT NULL,
     TossDecision ENUM('Bat', 'Field') NOT NULL,
     Result ENUM('Win', 'Draw', 'No Result'),
     MarginSize INT, -- how many runs/wickets won by
     MarginType ENUM('Wickets', 'Runs'),
-    FOREIGN KEY (MatchID) REFERENCES CricketMatchData.CricketMatch(MatchID),
+    PRIMARY KEY (MatchID, DataSource),
+    FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
     FOREIGN KEY (WinningTeamID) REFERENCES CricketMatchData.Team(TeamID)
 );
 
@@ -70,7 +72,6 @@ CREATE TABLE CricketMatchData.MatchTeam
     MatchID INT NOT NULL,
     DataSource ENUM('CRICSHEET') NOT NULL,
     TeamID INT NOT NULL,
-    FOREIGN KEY (MatchID) REFERENCES CricketMatchData.CricketMatch(MatchID),
-    FOREIGN KEY (DataSource) REFERENCES CricketMatchData.CricketMatch(DataSource),
+    FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
     FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID)
 );

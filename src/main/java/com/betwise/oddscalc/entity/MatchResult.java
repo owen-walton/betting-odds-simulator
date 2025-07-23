@@ -13,6 +13,7 @@ public class MatchResult {
 
     public MatchResult(int matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result) {
         this.matchID = matchID;
+        this.dataSource = dataSource;
         this.winningTeamID = winningTeamID;
         this.tossWinningTeamID = tossWinningTeamID;
         this.tossDecision = tossDecision;
@@ -23,6 +24,7 @@ public class MatchResult {
 
     public MatchResult(int matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result, TeamKey winningTeamNaturalKey) {
         this.matchID = matchID;
+        this.dataSource = dataSource;
         this.winningTeamID = winningTeamID;
         this.tossWinningTeamID = tossWinningTeamID;
         this.tossDecision = tossDecision;

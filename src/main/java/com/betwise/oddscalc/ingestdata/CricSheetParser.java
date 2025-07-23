@@ -42,11 +42,11 @@ public class CricSheetParser {
             }
 
             // get match results
-            TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/decision", matchInfoMap)) {
+            TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {
                 case "bat" -> TossDecision.BAT;
                 case "field" -> TossDecision.FIELD;
                 default -> {
-                    System.out.println((String)ParseJSON.getValueFromMap("info/decision", matchInfoMap)
+                    System.out.println((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)
                             + " is not a valid toss decision.");
                     throw new RuntimeException();
                 }
@@ -81,7 +81,7 @@ public class CricSheetParser {
             Integer marginSize;
             MarginType marginType;
             if (result == Result.WIN) {
-                if ((Integer)(ParseJSON.getValueFromMap("info/outcome/by/innings", matchInfoMap)) == 1) {
+                if (((ParseJSON.getValueFromMap("info/outcome/by/innings", matchInfoMap))) != null) {
                     marginSize = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/runs", matchInfoMap));
                     marginType = MarginType.ONE_INNINGS_AND_RUNS;
                 } else {

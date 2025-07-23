@@ -4,6 +4,11 @@ public class Team {
     private int teamID;
     private String name;
 
+    public Team() {
+        this.teamID = -1;
+        this.name = null;
+    }
+
     public Team(int teamID, String name) {
         this.teamID = teamID;
         this.name = name;

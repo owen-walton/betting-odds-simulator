@@ -1,9 +1,12 @@
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
+import com.betwise.oddscalc.entity.MatchResult;
 import com.betwise.oddscalc.entity.MatchTeam;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.List;
 
 public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
 
@@ -35,6 +38,32 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Override
+    public void bulkInsertIfNotExists(List<MatchTeam> matchTeams) {
+        if (matchTeams.isEmpty()) {
+            return;
+        }
+
+        String sql = "INSERT INTO MatchTeam (MatchID, DataSource, TeamID) " +
+                "VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE TeamID = VALUES(TeamID)";
+
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+
+            for (MatchTeam matchTeam : matchTeams) {
+                statement.setInt(1, matchTeam.getMatchID());
+                statement.setString(2, matchTeam.getDataSource().name());
+                statement.setInt(3, matchTeam.getTeamID());
+                statement.addBatch();
+            }
+
+            statement.executeBatch();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
