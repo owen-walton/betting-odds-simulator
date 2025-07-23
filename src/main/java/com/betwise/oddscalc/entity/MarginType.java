@@ -1,7 +1,7 @@
 package com.betwise.oddscalc.entity;
 
 public enum MarginType {
-    RUNS, WICKETS;
+    RUNS, WICKETS, ONE_INNINGS_AND_RUNS;
 
     @Override
     // toString where "_" is a space and each word is title case
@@ -19,6 +19,7 @@ public enum MarginType {
             }
 
         }
-        return str.toString();
+        // change ONE to numeric form
+        return str.toString().replaceAll("One ", "1");
     }
 }

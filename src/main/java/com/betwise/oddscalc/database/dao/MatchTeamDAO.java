@@ -25,8 +25,8 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
                 "VALUES (?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setInt(1, matchTeam.matchID());
-            statement.setInt(2, matchTeam.teamID());
+            statement.setInt(1, matchTeam.getMatchID());
+            statement.setInt(2, matchTeam.getTeamID());
 
             statement.executeUpdate();
             return true;

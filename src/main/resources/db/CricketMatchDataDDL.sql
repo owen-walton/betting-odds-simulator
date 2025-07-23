@@ -68,7 +68,9 @@ CREATE TABLE CricketMatchData.MatchTeam
 (
     MatchTeamID INT AUTO_INCREMENT PRIMARY KEY,
     MatchID INT NOT NULL,
+    DataSource ENUM('CRICSHEET') NOT NULL,
     TeamID INT NOT NULL,
     FOREIGN KEY (MatchID) REFERENCES CricketMatchData.CricketMatch(MatchID),
+    FOREIGN KEY (DataSource) REFERENCES CricketMatchData.CricketMatch(DataSource),
     FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID)
 );

@@ -23,8 +23,8 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         String sql = "INSERT INTO Venue (GroundName, City) VALUES (?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setString(1, venue.ground());
-            statement.setString(2, venue.city());
+            statement.setString(1, venue.getGroundName());
+            statement.setString(2, venue.getCity());
 
             statement.executeUpdate();
             return true;

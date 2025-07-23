@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface WriteDAO<T> {
     public boolean insert(T t);
-    public boolean bulkInsertIfNotExists(List<T> t);
+    public List<T> bulkInsertIfNotExists(List<T> t);
 }

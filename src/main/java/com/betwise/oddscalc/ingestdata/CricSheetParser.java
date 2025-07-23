@@ -15,45 +15,138 @@ public class CricSheetParser {
     private final String JSON_EXTENSION = ".json";
     private final List<Venue> venueList = new ArrayList<>();
 
+    // duplicates are handled later by DAOs not parser
     public CricketMatchDataSchema parseInternationalMatches() {
         CricketMatchDataSchema internationalCricketData = new CricketMatchDataSchema();
         List<String> internationalMatchIDs = getInternationalMatchIDs();
 
         for (String matchID : internationalMatchIDs) {
+            Map<String, Object> matchInfoMap = getMatchInfoMap(matchID);
 
+            // get teams
+            List<String> teamNames = (List<String>) ParseJSON.getValueFromMap("info/teams", matchInfoMap);
+            List<Team> teams = new ArrayList<>();
+            for (String name : teamNames) {
+                teams.add(new Team(0, name));
+            }
+
+            // get venues
+            String[] venue = ((String) ParseJSON.getValueFromMap("info/venue", matchInfoMap)).split(",");
+            String ground = venue[0].trim();
+            String city;
+            // if venue field is in format "Ground name, City"
+            if(venue.length == 2) {
+                city = venue[1].trim();
+            } else { // otherwise just take city from
+                city = (String) ParseJSON.getValueFromMap("info/city", matchInfoMap);
+            }
+
+            // get match results
+            TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/decision", matchInfoMap)) {
+                case "bat" -> TossDecision.BAT;
+                case "field" -> TossDecision.FIELD;
+                default -> {
+                    System.out.println((String)ParseJSON.getValueFromMap("info/decision", matchInfoMap)
+                            + " is not a valid toss decision.");
+                    throw new RuntimeException();
+                }
+            };
+
+            String strResult = (String)ParseJSON.getValueFromMap("info/outcome/result", matchInfoMap);
+            Result result;
+            TeamKey winningTeamKey;
+            if (strResult == null) {
+                result = Result.WIN;
+                winningTeamKey = new TeamKey((String)ParseJSON.getValueFromMap("info/outcome/winner", matchInfoMap));
+            } else {
+                if (strResult.equalsIgnoreCase("tie")) {
+                    String winner = (String) ParseJSON.getValueFromMap("info/outcome/eliminator", matchInfoMap);
+                    result = Result.WIN_IN_SUPER_OVER;
+                    if (winner == null) {
+                        winner = (String) ParseJSON.getValueFromMap("info/outcome/bowl_out", matchInfoMap);
+                        result = Result.WIN_IN_BOWL_OFF;
+                    }
+                    if (winner == null) {
+                        throw new RuntimeException("Unexpected result type.");
+                    } else {
+                        winningTeamKey = new TeamKey(winner);
+                    }
+                } else {
+                    result = Result.fromString(strResult);
+                    winningTeamKey = null;
+                }
+                winningTeamKey = null;
+            }
+
+            Integer marginSize;
+            MarginType marginType;
+            if (result == Result.WIN) {
+                if ((Integer)(ParseJSON.getValueFromMap("info/outcome/by/innings", matchInfoMap)) == 1) {
+                    marginSize = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/runs", matchInfoMap));
+                    marginType = MarginType.ONE_INNINGS_AND_RUNS;
+                } else {
+                    Integer wickets = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/wickets", matchInfoMap));
+                    if (wickets != null) {
+                        marginSize = wickets;
+                        marginType = MarginType.WICKETS;
+                    } else {
+                        marginSize = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/runs", matchInfoMap));
+                        marginType = MarginType.RUNS;
+                    }
+                }
+            } else {
+                marginSize = null;
+                marginType = null;
+            }
+
+            MatchResult matchResult = new MatchResult(
+                    Integer.parseInt(matchID),
+                    DataSource.CRICSHEET,
+                    0,
+                    0,
+                    tossDecision,
+                    marginSize,
+                    marginType,
+                    result,
+                    winningTeamKey
+            );
+
+            // get match
+            List<String> matchDates = (List<String>) ParseJSON.getValueFromMap("info/dates", matchInfoMap);
+            CricketMatch match = new CricketMatch(
+                    Integer.parseInt(matchID),
+                    DataSource.CRICSHEET,
+                    LocalDate.parse(matchDates.get(0)),
+                    0,
+                    (String) ParseJSON.getValueFromMap("info/match_type", matchInfoMap),
+                    new VenueKey(ground, city)
+            );
+
+            // get match teams
+            List<MatchTeam> matchTeams = new ArrayList<>();
+            matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICSHEET, 0, new TeamKey(teams.get(0).getName())));
+            matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICSHEET, 0, new TeamKey(teams.get(1).getName())));
+
+            // build all information about match into schema object
+            CricketMatchDataSchema tempSchema = new CricketMatchDataSchema(
+                    null, // match formats are added in DDL so doesn't matter
+                    teams,
+                    List.of(new Venue(0, ground, city)),
+                    null,
+                    List.of(matchResult),
+                    List.of(match),
+                    matchTeams
+            );
+            internationalCricketData.appendSchema(tempSchema);
         }
 
         return internationalCricketData;
     }
 
-    public CricketMatch getMatchData(String matchID) {
+    public Map<String, Object> getMatchInfoMap(String matchID) {
         String szMatchJson = joinStringList(FileReadHelper.readZipFromResources(CRICSHEET_PATH, matchID + JSON_EXTENSION));
-        // ignore unused 'innings' and 'meta' to save computation
-        Map<String, Object> matchMap = ParseJSON.parseJsonToMap(szMatchJson, Set.of("innings", "meta"));
-
-        /*
-        List<String> matchDates = (List<String>) ParseJSON.getValueFromMap("info/dates", matchMap);
-        String[] venue = ((String) ParseJSON.getValueFromMap("info/venue", matchMap)).split(",");
-        String ground = venue[0].trim();
-        String city;
-
-        // if venue field is in format "Ground name, City"
-        if(venue.length == 2) {
-            city = venue[1].trim();
-        } else { // otherwise just take city from
-            city = (String) ParseJSON.getValueFromMap("info/city", matchMap);
-        }
-
-        CricketMatch match = new CricketMatch(
-                MatchFormat.fromString((String) ParseJSON.getValueFromMap("info/match_type", matchMap)),
-                LocalDate.parse(matchDates.get(0)),
-                matchDates.size(),
-                queryVenueList(ground, city),
-                null,
-                null
-        );
-
-        return match;*/
+        // ignore unused 'innings' and 'meta' to save computation as innings is a large object
+        return ParseJSON.parseJsonToMap(szMatchJson, Set.of("innings", "meta"));
     }
 
     // unfinished at determining home team
@@ -123,33 +216,7 @@ public class CricSheetParser {
         return internationalMatchIDs;
     }
 
-    public Venue queryVenueList(String ground, String city) {
-        if (ground == null || city == null || ground.isBlank() || city.isBlank()) {
-            return null;
-        }
-        // to combat inconsistencies with cricsheet venues as names of same grounds sometimes vary
-        String normalisedGround = normaliseString(ground);
-        String normalisedCity = normaliseString(city);
-
-        for (Venue venue : venueList) {
-
-            // if the venue already exists (ignoring casing, punctuation, etc) then return that venue
-            if (normaliseString(venue.ground()).equals(normalisedGround)
-                    && normaliseString(venue.city()).equals(normalisedCity)) {
-                return venue;
-            }
-        }
-
-        // venue is not found so add to list and return
-        Venue newVenue = new Venue(formatForStorage(ground), formatForStorage(city));
-        venueList.add(newVenue);
-        return newVenue;
-    }
-
-    public String normaliseString(String str) {
-        return str.toLowerCase().replaceAll("[^a-z0-9]", "");
-    }
-
+    /*
     public String formatForStorage(String input) {
         if (input == null || input.isBlank()) return "";
 
@@ -165,5 +232,5 @@ public class CricSheetParser {
             }
         }
         return sb.toString().trim();
-    }
+    } */
 }

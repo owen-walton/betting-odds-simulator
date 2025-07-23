@@ -25,31 +25,31 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
                 " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setInt(1, matchResult.matchID());
+            statement.setInt(1, matchResult.getMatchID());
 
-            if (matchResult.winningTeamID() != null) {
-                statement.setInt(2, matchResult.winningTeamID());
+            if (matchResult.getWinningTeamID() != null) {
+                statement.setInt(2, matchResult.getWinningTeamID());
             } else {
                 statement.setNull(2, java.sql.Types.INTEGER);
             }
 
-            statement.setInt(3, matchResult.tossWinningTeamID());
-            statement.setString(4, matchResult.tossDecision().toString());
+            statement.setInt(3, matchResult.getTossWinningTeamID());
+            statement.setString(4, matchResult.getTossDecision().toString());
 
-            if (matchResult.result() != null) {
-                statement.setString(5, matchResult.result().toString());
+            if (matchResult.getResult() != null) {
+                statement.setString(5, matchResult.getResult().toString());
             } else {
                 statement.setNull(5, java.sql.Types.VARCHAR);
             }
 
-            if (matchResult.marginSize() != null) {
-                statement.setInt(6, matchResult.marginSize());
+            if (matchResult.getMarginSize() != null) {
+                statement.setInt(6, matchResult.getMarginSize());
             } else {
                 statement.setNull(6, java.sql.Types.INTEGER);
             }
 
-            if (matchResult.marginType() != null) {
-                statement.setString(7, matchResult.marginType().toString());
+            if (matchResult.getMarginType() != null) {
+                statement.setString(7, matchResult.getMarginType().toString());
             } else {
                 statement.setNull(7, java.sql.Types.VARCHAR);
             }

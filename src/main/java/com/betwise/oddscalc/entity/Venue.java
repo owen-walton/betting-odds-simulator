@@ -1,4 +1,37 @@
 package com.betwise.oddscalc.entity;
 
-public record Venue(int venueID, String ground, String city) {
+public class Venue {
+    private int venueID;
+    private String groundName;
+    private String city;
+
+    public Venue(int venueID, String groundName, String city) {
+        this.venueID = venueID;
+        this.groundName = groundName;
+        this.city = city;
+    }
+
+    public int getVenueID() {
+        return venueID;
+    }
+
+    public void setVenueID(int venueID) {
+        this.venueID = venueID;
+    }
+
+    public String getGroundName() {
+        return groundName;
+    }
+
+    public void setGroundName(String groundName) {
+        this.groundName = groundName;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
 }

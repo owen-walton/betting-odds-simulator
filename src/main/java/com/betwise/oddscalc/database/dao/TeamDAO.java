@@ -23,7 +23,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         String sql = "INSERT INTO Team (Name) VALUES (?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setString(1, team.name());
+            statement.setString(1, team.getName());
 
             statement.executeUpdate();
             return true;

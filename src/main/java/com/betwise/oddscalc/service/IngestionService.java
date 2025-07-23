@@ -1,9 +1,12 @@
 package com.betwise.oddscalc.service;
 
-import com.betwise.oddscalc.database.connection.DBConnection;
 import com.betwise.oddscalc.database.dao.*;
 import com.betwise.oddscalc.entity.CricketMatchDataSchema;
+import com.betwise.oddscalc.entity.Team;
+import com.betwise.oddscalc.entity.Venue;
 import com.betwise.oddscalc.ingestdata.CricSheetParser;
+
+import java.util.List;
 
 public class IngestionService {
     public IngestionService() {
@@ -11,8 +14,8 @@ public class IngestionService {
     }
 
     public void ingest() {
-        CricketMatchDataSchema schema;
-        uploadCricketMatchDataSchema(schema);
+        CricSheetParser cricSheetParser = new CricSheetParser();
+        uploadCricketMatchDataSchema(cricSheetParser.parseInternationalMatches());
     }
 
     public void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
@@ -21,20 +24,23 @@ public class IngestionService {
                 VenueDAO venueDAO = new VenueDAO();
                 // TeamHomeVenueDAO homeDAO = new TeamHomeVenueDAO();
                 // team home venue requires calculation from entire dataset so is not derived purely from schema object
+                // will be calculated later
                 CricketMatchDAO matchDAO = new CricketMatchDAO();
                 MatchResultDAO resultDAO = new MatchResultDAO();
                 MatchTeamDAO matchTeamDAO = new MatchTeamDAO()
         ) {
-            teamDAO.bulkInsertIfNotExists(schema.teams());
-            venueDAO.bulkInsertIfNotExists(schema.venues());
-            matchDAO.bulkInsertIfNotExists(schema.cricketMatches());
-            resultDAO.bulkInsertIfNotExists(schema.matchResults());
-            matchTeamDAO.bulkInsertIfNotExists(schema.matchTeams());
+            // insert teams and venues
+            List<Team> teams = teamDAO.bulkInsertIfNotExists(schema.getTeams());
+            for (Team team : teams) {
+                schema.updateTeamKey(team);
+            }
+            List<Venue> venues = venueDAO.bulkInsertIfNotExists(schema.getVenues());
+            for (Venue venue : venues) {
+                schema.updateVenueKey(venue);
+            }
+            matchDAO.bulkInsertIfNotExists(schema.getCricketMatches());
+            resultDAO.bulkInsertIfNotExists(schema.getMatchResults());
+            matchTeamDAO.bulkInsertIfNotExists(schema.getMatchTeams());
         }
-    }
-
-    public void loadCricsheet() {
-        CricSheetParser cricSheetParser = new CricSheetParser();
-        cricSheetParser.parseInternationalMatches();
     }
 }

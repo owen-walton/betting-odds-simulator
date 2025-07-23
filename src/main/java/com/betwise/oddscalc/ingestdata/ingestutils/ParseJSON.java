@@ -18,6 +18,7 @@ public final class ParseJSON {
         return false;
     }
 
+    // returns null for an invalid key path
     public static Object getValueFromMap(String keyPath, Map<String, Object> map) {
         // gets the value where the key follows the path provided
         Object current = map;
