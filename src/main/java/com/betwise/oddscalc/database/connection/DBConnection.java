@@ -38,12 +38,15 @@ public class DBConnection {
 
     public void connect() {
         try {
-            loadProperties();
-            // load the driver class explicitly
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(this.dbURL, this.dbUser, this.dbPassword);
+            if (conn == null || conn.isClosed()) {
+                loadProperties();
+                // load the driver class explicitly
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                conn = DriverManager.getConnection(this.dbURL, this.dbUser, this.dbPassword);
+            }
+
         } catch (Exception e) {
-            throw new RuntimeException("DBConfig.properties not found in classpath");
+            throw new RuntimeException(e);
         }
     }
 
@@ -52,20 +55,27 @@ public class DBConnection {
             try {
                 this.conn.close();
             } catch (Exception e) {
-                throw new RuntimeException("DBConfig.properties not found in classpath");
+                throw new RuntimeException(e);
             }
         }
     }
 
     public boolean isConnected() {
         try {
-            return (!conn.isClosed() && conn != null);
+            return (conn != null && !conn.isClosed());
         } catch (Exception e) {
             return false;
         }
     }
 
     public Connection getConn() {
+        try {
+            if (conn == null || conn.isClosed()) {
+                connect();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return conn;
     }
 }

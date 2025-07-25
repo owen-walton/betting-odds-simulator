@@ -16,14 +16,14 @@ INSERT INTO CricketMatchData.MatchFormat(FormatName, MatchLengthDays) VALUES
 CREATE TABLE CricketMatchData.Team
 (
     TeamID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(30) NOT NULL UNIQUE
+    Name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE CricketMatchData.Venue
 (
     VenueID INT AUTO_INCREMENT PRIMARY KEY,
-    GroundName VARCHAR(40) NOT NULL,
-    City VARCHAR(30) NOT NULL,
+    GroundName VARCHAR(80) NOT NULL,
+    City VARCHAR(50) NOT NULL,
     UNIQUE (GroundName, City)
 );
 

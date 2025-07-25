@@ -6,7 +6,9 @@ import com.betwise.oddscalc.entity.Team;
 import com.betwise.oddscalc.entity.Venue;
 import com.betwise.oddscalc.ingestdata.CricSheetParser;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class IngestionService {
     public IngestionService() {
@@ -15,7 +17,22 @@ public class IngestionService {
 
     public void ingest() {
         CricSheetParser cricSheetParser = new CricSheetParser();
-        uploadCricketMatchDataSchema(cricSheetParser.parseInternationalMatches());
+        List<String> allMatchIDs = cricSheetParser.getInternationalMatchIDs();
+        final int BATCH_SIZE = 500;
+
+        for (int i = 0; i < allMatchIDs.size(); i += BATCH_SIZE) {
+            int endIndex;
+            if (BATCH_SIZE + i < allMatchIDs.size()) {
+                endIndex = BATCH_SIZE + i;
+            } else {
+                endIndex = allMatchIDs.size();
+            }
+            Set<String> batchIDs = new HashSet<>(allMatchIDs.subList(i, endIndex));
+
+            CricketMatchDataSchema schema = cricSheetParser.parseMatchesBatch(batchIDs);
+            uploadCricketMatchDataSchema(schema);
+            // schema is now GC-eligible
+        }
     }
 
     public void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
