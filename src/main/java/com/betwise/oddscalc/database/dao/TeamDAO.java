@@ -86,7 +86,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT INTO Team (Name) VALUES (?) ON DUPLICATE KEY UPDATE Name = VALUES(Name)";
+        String sql = "INSERT IGNORE INTO Team (Name) VALUES (?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {

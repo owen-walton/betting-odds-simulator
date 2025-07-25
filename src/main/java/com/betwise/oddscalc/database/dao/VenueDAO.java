@@ -88,9 +88,8 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT INTO Venue (GroundName, City) " +
-                "VALUES (?, ?) " +
-                "ON DUPLICATE KEY UPDATE GroundName = VALUES(GroundName), City = VALUES(City)";
+        String sql = "INSERT IGNORE INTO Venue (GroundName, City) " +
+                "VALUES (?, ?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {

@@ -43,9 +43,8 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
             return;
         }
 
-        String sql = "INSERT INTO TeamHomeVenue (TeamID, VenueID) " +
-                "VALUES (?, ?) " +
-                "ON DUPLICATE KEY UPDATE TeamID = VALUES(TeamID), VenueID = VALUES(VenueID)";
+        String sql = "INSERT IGNORE INTO TeamHomeVenue (TeamID, VenueID) " +
+                "VALUES (?, ?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {

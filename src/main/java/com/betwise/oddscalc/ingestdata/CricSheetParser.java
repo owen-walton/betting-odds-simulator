@@ -91,7 +91,7 @@ public class CricSheetParser {
                     result = Result.WIN_IN_BOWL_OFF;
                 }
                 if (winner == null) {
-                    throw new RuntimeException("Unexpected result type.");
+                    result = Result.TIE;
                 } else {
                     winningTeamKey = new TeamKey(winner);
                 }

@@ -74,15 +74,9 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT INTO MatchResult " +
+        String sql = "INSERT IGNORE INTO MatchResult " +
                 "(MatchID, DataSource, WinningTeamID, TossWinningTeamID, TossDecision, Result, MarginSize, MarginType)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)" +
-                " ON DUPLICATE KEY UPDATE WinningTeamID = VALUES(WinningTeamID)," +
-                " TossWinningTeamID = VALUES(TossWinningTeamID)," +
-                " TossDecision = VALUES(TossDecision)," +
-                " Result = VALUES(Result)," +
-                " MarginSize = VALUES(MarginSize)," +
-                " MarginType = VALUES(MarginType)";
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {

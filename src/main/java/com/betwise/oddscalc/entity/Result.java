@@ -1,7 +1,7 @@
 package com.betwise.oddscalc.entity;
 
 public enum Result {
-    WIN, DRAW, NO_RESULT, WIN_IN_BOWL_OFF, WIN_IN_SUPER_OVER;
+    WIN, DRAW, TIE, NO_RESULT, WIN_IN_BOWL_OFF, WIN_IN_SUPER_OVER;
 
     public static Result fromString(String input) {
         if (input == null) return null;
