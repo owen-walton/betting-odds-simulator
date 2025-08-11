@@ -159,7 +159,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
 
             for (Venue venue : venues) {
                 statement.setString(1, venue.getGroundName());
-                statement.setString(2, venue.getCity());
+                statement.setString(2, (venue.getCity() == null ? "" : venue.getCity()));
                 statement.addBatch();
             }
 

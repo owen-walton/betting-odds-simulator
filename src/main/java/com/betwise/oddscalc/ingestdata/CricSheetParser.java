@@ -63,6 +63,9 @@ public class CricSheetParser {
             city = venue[1].trim();
         } else { // otherwise just take city from
             city = (String) ParseJSON.getValueFromMap("info/city", matchInfoMap);
+            if (city == null) {
+                city = "";
+            }
         }
 
         // get match results

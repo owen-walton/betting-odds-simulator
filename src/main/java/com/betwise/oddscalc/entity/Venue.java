@@ -30,7 +30,7 @@ public class Venue {
     }
 
     public void setGroundName(String groundName) {
-        this.groundName = groundName;
+        this.groundName = (groundName == null ? "" : groundName.trim());
     }
 
     public String getCity() {
@@ -38,6 +38,6 @@ public class Venue {
     }
 
     public void setCity(String city) {
-        this.city = city;
+        this.city = (city == null ? "" : city.trim());
     }
 }
