@@ -2,12 +2,15 @@ package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
 import com.betwise.oddscalc.entity.Venue;
+import com.betwise.oddscalc.entity.VenueKey;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
 
@@ -81,9 +84,69 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             return false;
         }
     }
+    public List<Venue> removeExisting(List<Venue> venues) {
+        if (venues.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // remove all duplicate venue appearances in list
+        Set<VenueKey> uniqueKeys = new HashSet<>();
+        List<Venue> uniqueVenues = new ArrayList<>();
+        for (Venue venue : venues) {
+            VenueKey key = new VenueKey(venue.getGroundName(), venue.getCity()); // or country, depending on your key
+            if (!uniqueKeys.contains(key)) {
+                uniqueKeys.add(key);
+                uniqueVenues.add(venue);
+            }
+        }
+        venues = uniqueVenues;
+
+        // prepare sql
+        StringBuilder sb = new StringBuilder("SELECT GroundName, City FROM Venue WHERE (GroundName, City) IN (");
+        for (int i = 0; i < venues.size(); i++) {
+            sb.append("(?, ?)");
+            if (i < venues.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(")");
+        String sql = sb.toString();
+
+        // execute sql
+        Set<VenueKey> existingVenueKeys = new HashSet<>();
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int i = 1;
+            for (Venue venue : venues) {
+                ps.setString(i++, venue.getGroundName());
+                ps.setString(i++, venue.getCity()); // or country, depending on your key
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    existingVenueKeys.add(new VenueKey(rs.getString("GroundName"), rs.getString("City")));
+                }
+            }
+
+            List<Venue> newVenues = new ArrayList<>();
+            for (Venue venue : venues) {
+                VenueKey key = new VenueKey(venue.getGroundName(), venue.getCity());
+                if (!existingVenueKeys.contains(key)) {
+                    newVenues.add(venue);
+                }
+            }
+            return newVenues;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public void bulkInsertIfNotExists(List<Venue> venues) {
+        venues = removeExisting(venues);
+
         if (venues.isEmpty()) {
             return;
         }

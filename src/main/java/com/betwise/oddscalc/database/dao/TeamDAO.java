@@ -7,8 +7,7 @@ import com.betwise.oddscalc.entity.TeamKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
@@ -81,7 +80,68 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
     }
 
+    public List<Team> removeExisting(List<Team> teams) {
+        if (teams.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // remove all duplicate team appearances in list
+        Set<TeamKey> uniqueKeys = new HashSet<>();
+        List<Team> uniqueTeams = new ArrayList<>();
+        for (Team team : teams) {
+            TeamKey key = new TeamKey(team.getName());
+            if (!uniqueKeys.contains(key)) {
+                uniqueKeys.add(key);
+                uniqueTeams.add(team);
+            }
+        }
+        teams = uniqueTeams;
+
+        // prepare string to query existing names
+        StringBuilder sb = new StringBuilder("SELECT Name FROM Team WHERE Name IN (");
+        for (int i = 0; i < teams.size(); i++) {
+            sb.append("?");
+            if (i < teams.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(")");
+        String sql = sb.toString();
+
+        // query existing names
+        Set<TeamKey> existingTeamKeys = new HashSet<>();
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int i = 1;
+            for (Team team : teams) {
+                ps.setString(i, team.getName());
+                i++;
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    existingTeamKeys.add(new TeamKey(rs.getString("Name")));
+                }
+            }
+
+            List<Team> newTeams = new ArrayList<>();
+            for (Team team : teams) {
+                if (!existingTeamKeys.contains(new TeamKey(team.getName()))) {
+                    newTeams.add(team);
+                }
+            }
+            return newTeams;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public void bulkInsertIfNotExists(List<Team> teams) {
+        teams = removeExisting(teams);
+
         if (teams.isEmpty()) {
             return;
         }
