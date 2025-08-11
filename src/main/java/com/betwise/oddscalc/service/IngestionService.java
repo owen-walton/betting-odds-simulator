@@ -31,7 +31,6 @@ public class IngestionService {
 
             CricketMatchDataSchema schema = cricSheetParser.parseMatchesBatch(batchIDs);
             uploadCricketMatchDataSchema(schema);
-            // schema is now GC-eligible
         }
     }
 
