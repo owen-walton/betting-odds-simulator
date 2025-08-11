@@ -11,6 +11,12 @@ public class Venue {
         this.city = null;
     }
 
+    public Venue(int venueID, VenueKey venueKey) {
+        this.venueID = venueID;
+        this.groundName = venueKey.groundName();
+        this.city = venueKey.city();
+    }
+
     public Venue(int venueID, String groundName, String city) {
         this.venueID = venueID;
         this.groundName = groundName;

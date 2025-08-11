@@ -22,10 +22,11 @@ public class CricSheetParser {
         double index = 0.0;
         double size = matchIDs.size();
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
+        VenueNormaliser venueNormaliser = new VenueNormaliser(null);
         for (String matchID : matchIDs) {
             long start = System.currentTimeMillis();
 
-            internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons));
+            internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons, venueNormaliser));
 
             long end = System.currentTimeMillis();
             System.out.println("Parsed in " + (end - start) + "ms");
@@ -36,7 +37,7 @@ public class CricSheetParser {
         return internationalCricketData;
     }
 
-    public CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons) {
+    public CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons, VenueNormaliser venueNormaliser) {
 
         Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(joinStringList(allMatchJsons.get(matchID)), Set.of("innings", "meta"));
 
@@ -67,6 +68,7 @@ public class CricSheetParser {
                 city = "";
             }
         }
+        VenueKey venueKey = venueNormaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
         TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {
@@ -146,7 +148,7 @@ public class CricSheetParser {
                 LocalDate.parse(matchDates.get(0)),
                 0,
                 matchFormat,
-                new VenueKey(ground, city)
+                venueKey
         );
 
         // get match teams
@@ -158,7 +160,7 @@ public class CricSheetParser {
         CricketMatchDataSchema tempSchema = new CricketMatchDataSchema(
                 null, // match formats are added in DDL so doesn't matter
                 teams,
-                List.of(new Venue(0, ground, city)),
+                List.of(new Venue(0, venueKey)),
                 null,
                 List.of(matchResult),
                 List.of(match),
@@ -233,22 +235,4 @@ public class CricSheetParser {
 
         return internationalMatchIDs;
     }
-
-    /*
-    public String formatForStorage(String input) {
-        if (input == null || input.isBlank()) return "";
-
-        String[] words = input.trim().toLowerCase().split("\\s+");
-        StringBuilder sb = new StringBuilder();
-
-        // make word title case
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                sb.append(Character.toUpperCase(word.charAt(0)))
-                        .append(word.substring(1))
-                        .append(" ");
-            }
-        }
-        return sb.toString().trim();
-    } */
 }
