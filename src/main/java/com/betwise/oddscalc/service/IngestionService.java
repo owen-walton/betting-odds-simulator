@@ -1,14 +1,11 @@
 package com.betwise.oddscalc.service;
 
 import com.betwise.oddscalc.database.dao.*;
-import com.betwise.oddscalc.entity.CricketMatchDataSchema;
-import com.betwise.oddscalc.entity.Team;
-import com.betwise.oddscalc.entity.Venue;
+import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.CricSheetParser;
+import com.betwise.oddscalc.ingestdata.ingestutils.VenueDeduplicator;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class IngestionService {
     public IngestionService() {
@@ -37,7 +34,6 @@ public class IngestionService {
     public void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
         try (
                 TeamDAO teamDAO = new TeamDAO();
-                VenueDAO venueDAO = new VenueDAO();
                 // TeamHomeVenueDAO homeDAO = new TeamHomeVenueDAO();
                 // team home venue requires calculation from entire dataset so is not derived purely from schema object
                 // will be calculated later
@@ -51,15 +47,61 @@ public class IngestionService {
             for (Team team : teams) {
                 schema.updateTeamKey(team);
             }
-            venueDAO.bulkInsertIfNotExists(schema.getVenues());
-            List<Venue> venues = venueDAO.getIDsIntoObjects(schema.getVenues());
-            for (Venue venue : venues) {
-                schema.updateVenueKey(venue);
-            }
+            schema = uploadVenues(schema);
 
             matchDAO.bulkInsertIfNotExists(schema.getCricketMatches());
             resultDAO.bulkInsertIfNotExists(schema.getMatchResults());
             matchTeamDAO.bulkInsertIfNotExists(schema.getMatchTeams());
         }
+    }
+
+    public CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
+        try (
+                VenueDAO venueDAO = new VenueDAO();
+                VenueDeduplicator venueDeduplicator = new VenueDeduplicator(initialiseCanonicalVenues(venueDAO))
+        )
+        {
+            // get all venues to be added
+            Set<Venue> venuesToAdd = new HashSet<>(schema.getVenues());
+
+            // get trueIDs or -1 into venueIDs in venuesToAdd and update in memory copy of Venue table
+            venuesToAdd = venueDeduplicator.updateCanonicalList(venuesToAdd);
+
+            // add all new venues and edit all overwritten venues to db
+            venueDAO.bulkInsertAndUpdate(new ArrayList<>(venueDeduplicator.getEditedAndNewVenues()));
+
+            /*
+            * - Get the new generated ids into the Venue objects that have a -1 id and call .updateVenueKey() on all.
+            * - Do not need to get the new ids into the venueDuplicator.canonicalMap because it is use once per bulk
+            * insert (not per single insert) so a new venueDuplicator will be redefined with newly correct map next
+            * time used.
+             */
+            Set<Venue> requireID = new HashSet<>();
+            Set<Venue> trueID = new HashSet<>();
+            for (Venue v : venuesToAdd) {
+                if (v.getVenueID() == -1) {
+                    requireID.add(v);
+                } else {
+                    trueID.add(v);
+                }
+            }
+            trueID.addAll(venueDAO.getIDsIntoObjects(new ArrayList<>(requireID)));
+            for (Venue venue : trueID) {
+                schema.updateVenueKey(venue);
+            }
+
+            return schema;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<VenueKey, VenueEditState> initialiseCanonicalVenues(VenueDAO venueDAO) {
+        Map<VenueKey, VenueEditState> canonicalVenues = new HashMap<>();
+        for (Venue v : venueDAO.getAllVenues()) {
+            canonicalVenues.put(v.getVenueKey(), new VenueEditState(v.getVenueID(), false));
+        }
+        return canonicalVenues;
     }
 }

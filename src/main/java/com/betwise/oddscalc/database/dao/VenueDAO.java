@@ -25,6 +25,29 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         }
     }
 
+    public Set<Venue> getAllVenues() {
+        String sql = "SELECT VenueID, GroundName, City FROM Venue";
+        Set<Venue> venues = new HashSet<>();
+
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                int venueId = rs.getInt("VenueID");
+                String groundName = rs.getString("GroundName");
+                String city = rs.getString("City");
+
+                venues.add(new Venue(venueId, new VenueKey(groundName, city)));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return venues;
+    }
+
+
     public List<Venue> getIDsIntoObjects(List<Venue> venues) {
         List<Venue> newList = new ArrayList<>();
 
@@ -164,6 +187,44 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             }
 
             statement.executeBatch();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // if venueID is -1 then it will insert the venue
+    // if the venueID is already a VenueID in the table it will update the details and keep VenueID
+    public void bulkInsertAndUpdate(List<Venue> venues) {
+        venues = removeExisting(venues);
+
+        if (venues.isEmpty()) {
+            return;
+        }
+
+        String sql = """
+        INSERT INTO Venue (VenueID, GroundName, City)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            GroundName = VALUES(GroundName),
+            City = VALUES(City)
+        """;
+
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (Venue venue : venues) {
+                // if venueID == -1, insert null so the primary key auto-increment triggers
+                if (venue.getVenueID() == -1) {
+                    ps.setNull(1, java.sql.Types.INTEGER);
+                } else {
+                    ps.setInt(1, venue.getVenueID());
+                }
+                ps.setString(2, venue.getGroundName());
+                ps.setString(3, venue.getCity() == null ? "" : venue.getCity());
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

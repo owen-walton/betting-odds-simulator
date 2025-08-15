@@ -23,6 +23,10 @@ public class Venue {
         this.city = city;
     }
 
+    public VenueKey getVenueKey() {
+        return new VenueKey(this.groundName, this.city);
+    }
+
     public int getVenueID() {
         return venueID;
     }

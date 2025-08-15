@@ -4,6 +4,7 @@ package com.betwise.oddscalc.ingestdata;
 import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.FileReadHelper;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
+import com.betwise.oddscalc.ingestdata.ingestutils.VenueNormaliser;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -22,7 +23,7 @@ public class CricSheetParser {
         double index = 0.0;
         double size = matchIDs.size();
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
-        VenueNormaliser venueNormaliser = new VenueNormaliser(null);
+        VenueNormaliser venueNormaliser = new VenueNormaliser();
         for (String matchID : matchIDs) {
             long start = System.currentTimeMillis();
 

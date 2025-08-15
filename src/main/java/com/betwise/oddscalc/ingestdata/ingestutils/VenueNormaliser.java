@@ -1,30 +1,18 @@
-package com.betwise.oddscalc.ingestdata;
+package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.VenueKey;
 
-import java.util.Map;
-import java.util.Set;
-
 public class VenueNormaliser {
-    private Map<String, Set<String>> venueAliasMap;
-
-    public VenueNormaliser(Map<String, Set<String>> venueAliasMap) {
-        this.venueAliasMap = venueAliasMap;
+    public VenueNormaliser() {
     }
 
     public VenueKey normaliseVenueKey(VenueKey venueKey) {
-        VenueKey newVenueKey = new VenueKey(normalise(venueKey.groundName()), normalise(venueKey.city()));
-
-        /*
-         * use alias map here
-         */
-
-        return newVenueKey;
+        return new VenueKey(normalise(venueKey.groundName()), normalise(venueKey.city()));
     }
 
     public String normalise(String input) {
         if (input == null) {
-            return null;
+            return "";
         }
 
         String result = input.trim();
