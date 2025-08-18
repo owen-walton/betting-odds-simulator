@@ -2,8 +2,8 @@ package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.VenueKey;
 
-public final class VenueNormaliser {
-    private VenueNormaliser() {
+public final class Normaliser {
+    private Normaliser() {
     }
 
     public static VenueKey normaliseVenueKey(VenueKey venueKey) {

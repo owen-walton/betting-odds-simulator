@@ -4,7 +4,7 @@ package com.betwise.oddscalc.ingestdata;
 import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.FileReadHelper;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
-import com.betwise.oddscalc.ingestdata.ingestutils.VenueNormaliser;
+import com.betwise.oddscalc.ingestdata.ingestutils.Normaliser;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -71,7 +71,7 @@ public class CricSheetParser {
                 city = "";
             }
         }
-        VenueKey venueKey = VenueNormaliser.normaliseVenueKey(new VenueKey(ground, city));
+        VenueKey venueKey = Normaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
         TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {

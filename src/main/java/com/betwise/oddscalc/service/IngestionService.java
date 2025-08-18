@@ -34,7 +34,6 @@ public class IngestionService {
     public void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
         try (
                 TeamDAO teamDAO = new TeamDAO();
-                TeamHomeVenueDAO homeDAO = new TeamHomeVenueDAO();
                 CricketMatchDAO matchDAO = new CricketMatchDAO();
                 MatchResultDAO resultDAO = new MatchResultDAO();
                 MatchTeamDAO matchTeamDAO = new MatchTeamDAO()
@@ -46,7 +45,6 @@ public class IngestionService {
                 schema.updateTeamKey(team);
             }
             schema = uploadVenues(schema);
-            homeDAO.bulkInsertIfNotExists(schema.getTeamHomeVenues());
             matchDAO.bulkInsertIfNotExists(schema.getCricketMatches());
             resultDAO.bulkInsertIfNotExists(schema.getMatchResults());
             matchTeamDAO.bulkInsertIfNotExists(schema.getMatchTeams());

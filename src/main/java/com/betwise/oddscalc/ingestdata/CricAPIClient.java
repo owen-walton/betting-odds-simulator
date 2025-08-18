@@ -1,12 +1,9 @@
 package com.betwise.oddscalc.ingestdata;
 
-import com.betwise.oddscalc.entity.CricketMatchDataSchema;
-import com.betwise.oddscalc.entity.Team;
-import com.betwise.oddscalc.entity.TeamHomeVenue;
-import com.betwise.oddscalc.entity.VenueKey;
+import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.HTTPClient;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
-import com.betwise.oddscalc.ingestdata.ingestutils.VenueNormaliser;
+import com.betwise.oddscalc.ingestdata.ingestutils.Normaliser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +13,7 @@ import java.util.*;
 public class CricAPIClient {
     private final HTTPClient httpClient;
     private final String apiKey;
-    private final String BASE_URL = "https://api.cricketdata.org/v1";
+    private final String BASE_URL = "https://api.cricapi.com/v1";
 
     public CricAPIClient(HTTPClient httpClient) {
         this.httpClient = httpClient;
@@ -41,110 +38,203 @@ public class CricAPIClient {
     }
 
     // not enough data from initial get, matchID is field of interest
-    public String getMatchListJson(LocalDate fromDate, int page) throws IOException {
-        String dateString = fromDate.getYear() + "-" +
-                String.format("%02d", fromDate.getMonthValue()) + "-" +
-                String.format("%02d", fromDate.getDayOfMonth());
-        String url = String.format(
-                "%s/matches?apikey=%s&date=%s&international=true&page=%d&gender=male",
-                BASE_URL,
-                apiKey,
-                dateString,
-                page
-        );
+    public String getMatchListJson() throws IOException {
+        String url = String.format("%s/matches?apikey=%s&international=true&gender=male", BASE_URL, apiKey);
         return httpClient.get(url);
+    }
+
+    public Set<String> getCompletedMatchIdsSince(LocalDate fromDate) throws IOException {
+        // fetch all matches
+        Map<String, Object> jsonMap = ParseJSON.parseJsonToMap(getMatchListJson());
+        List<Map<String, Object>> matches = (List<Map<String, Object>>) jsonMap.get("data");
+
+        if (matches == null) {
+            throw new RuntimeException("No matches returned by API");
+        }
+
+        Set<String> idSet = new HashSet<>();
+        for (Map<String, Object> match : matches) {
+            String status = (String) match.get("status");
+            String dateStr = (String) match.get("date");
+            LocalDate matchDate = LocalDate.parse(dateStr);
+
+            // only include completed matches after fromDate
+            if ("Completed".equalsIgnoreCase(status) && !matchDate.isBefore(fromDate)) {
+                idSet.add((String) match.get("id"));
+            }
+        }
+        return idSet;
     }
 
     // fetches the detailed match info by matchID
     public String getMatchDetailsJson(String matchID) throws IOException {
-        String url = String.format(
-                "%s/matches/%s?apikey=%s",
-                BASE_URL,
-                matchID,
-                apiKey
-        );
+        String url = String.format("%s/match_info?apikey=%s&id=%s", BASE_URL, apiKey, matchID);
         return httpClient.get(url);
     }
 
     @SuppressWarnings("unchecked")
     public CricketMatchDataSchema parseAllMatchesSince(LocalDate fromDate) throws IOException {
         // add all matchIDs of finished matches after fromDate
-        Set<String> idSet = new HashSet<>();
-        int page = 1;
-        int totalPages;
-        do {
-            Map<String, Object> jsonMap = ParseJSON.parseJsonToMap(getMatchListJson(fromDate, page));
-            List<Map<String, Object>> matches = (List<Map<String, Object>>) ParseJSON.getValueFromMap("matches",
-                    jsonMap);
-
-            if (matches == null) {
-                throw new RuntimeException("No matches available since the date given");
-            }
-
-            for (Map<String, Object> match : matches) {
-                String status    = (String) match.get("status");
-                String startDate = (String) match.get("startDate");
-                if (status.equalsIgnoreCase("completed")
-                        && !LocalDate.parse(startDate).isBefore(fromDate)) {
-                    idSet.add((String) match.get("id"));
-                }
-
-            }
-            // calculate total pages
-            Map<String,Object> pagination =
-                    (Map<String,Object>) jsonMap.get("pagination");
-            totalPages = ((Integer) pagination.get("totalPages"));
-
-            page++;
-        } while (page <= totalPages);
+        Set<String> idSet = getCompletedMatchIdsSince(fromDate);
 
         // use matchID set to parse all matches
         CricketMatchDataSchema schema = new CricketMatchDataSchema();
         for (String matchID : idSet) {
-            schema.appendSchema(parseSingleMatch(matchID));
+            schema.appendSchema(parseSingleMatch(matchID, fromDate));
         }
         return schema;
     }
 
-    public CricketMatchDataSchema parseSingleMatch(String matchID) throws IOException {
+    public CricketMatchDataSchema parseSingleMatch(String matchID, LocalDate fromDate) throws IOException {
+        // get json
+        String matchJson = getMatchDetailsJson(matchID);
+
+        // null check
+        if (matchJson == null) {
+            throw new RuntimeException("Error getting match details");
+        }
 
         // get map of match details
-        Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(getMatchDetailsJson(matchID));
+        Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(matchJson);
+
+        // double check match is completed and correct date
+        String status = (String) ParseJSON.getValueFromMap("data/status", matchInfoMap);
+        String dateStr = (String) ParseJSON.getValueFromMap("data/date", matchInfoMap);
+        if (status == null || dateStr == null) {
+            throw new RuntimeException("Missing status or date in match details for matchID=" + matchID);
+        }
+        LocalDate matchDate = LocalDate.parse(dateStr);
+        if (!"Completed".equalsIgnoreCase(status) || matchDate.isBefore(fromDate)) {
+            return new CricketMatchDataSchema(); // empty schema, effectively skip this match
+        }
 
         // get match format
-        String format = (String) ParseJSON.getValueFromMap("match/format", matchInfoMap);
-        if (format == null) {
-            return new CricketMatchDataSchema();
-        }
-        if (format.equalsIgnoreCase("T20I")) {
+        String format = (String) ParseJSON.getValueFromMap("data/matchType", matchInfoMap);
+        format = format.toLowerCase(); // for the comparison
+        if (format.equals("t20") || format.equals("t20i")) {
             format = "T20";
-        }
-        if (format.equalsIgnoreCase("4-Day Test")) {
+        } else if (format.equals("odi")) {
+            format = "ODI";
+        } else if (format.equals("test")) {
             format = "Test";
-        }
-        if (!format.equalsIgnoreCase("Test") &&
-                        !format.equalsIgnoreCase("T20") &&
-                        !format.equalsIgnoreCase("ODI")) {
+        } else {
+            // skip the match
             return new CricketMatchDataSchema();
         }
 
         // get teams
         List<Team> teams = new ArrayList<>();
-        String homeTeamName = ((String)ParseJSON.getValueFromMap("match/teams/home", matchInfoMap)).split(" ")[0];
-        String awayTeamName = ((String)ParseJSON.getValueFromMap("match/teams/away", matchInfoMap)).split(" ")[0];
+        String homeTeamName = ((List<String>) ParseJSON.getValueFromMap("data/teams", matchInfoMap)).get(0);
+        String awayTeamName = ((List<String>) ParseJSON.getValueFromMap("data/teams", matchInfoMap)).get(1);
         teams.add(new Team(0, homeTeamName));
         teams.add(new Team(0, awayTeamName));
+        if (homeTeamName == null || awayTeamName == null) {
+            return new CricketMatchDataSchema();
+        }
 
-        // get venues
-        String ground = (String)ParseJSON.getValueFromMap("match/venue/ground", matchInfoMap);
-        String city = (String)ParseJSON.getValueFromMap("match/venue/city", matchInfoMap);
-        VenueKey venueKey = VenueNormaliser.normaliseVenueKey(new VenueKey(ground, city));
+        // get venue
+        String venueStr = (String)ParseJSON.getValueFromMap("data/venue", matchInfoMap);
+        String ground = venueStr.split(",", 2)[0];
+        String city = venueStr.split(",", 2)[1];
+        VenueKey venueKey = Normaliser.normaliseVenueKey(new VenueKey(ground, city));
 
-        // TODO get team home venues
-        // TeamHomeVenue teamHomeVenue = new TeamHomeVenue(0, )
+        // get result
+        String toss = (String) ParseJSON.getValueFromMap("data/tossChoice", matchInfoMap);
+        TossDecision tossDecision =
+                switch (toss == null ? "" : toss.toLowerCase()) {
+            case "bat" -> TossDecision.BAT;
+            case "field" -> TossDecision.FIELD;
+            default -> {
+                throw new RuntimeException("Invalid toss decision");
+            }
+        };
 
-        // add team home venue
-        //CricketMatchDataSchema tempSchema;
+        String winner = (String) ParseJSON.getValueFromMap("data/winner", matchInfoMap);
+        String statusNote = (String) ParseJSON.getValueFromMap("data/statusNote", matchInfoMap);
+        Result result;
+        TeamKey winningTeamKey = null;
+        Integer marginSize = null;
+        MarginType marginType = null;
 
+        if (winner != null && !winner.isBlank()) {
+            winningTeamKey = new TeamKey(winner);
+            result = Result.WIN;
+
+            if (statusNote != null) {
+                String note = statusNote.toLowerCase();
+                if (note.contains("wicket")) {
+                    try {
+                        marginSize = Integer.parseInt(statusNote.replaceAll("[^0-9]", ""));
+                        marginType = MarginType.WICKETS;
+                    } catch (Exception ignored) {}
+                } else if (note.contains("run")) {
+                    try {
+                        marginSize = Integer.parseInt(statusNote.replaceAll("[^0-9]", ""));
+                        marginType = MarginType.RUNS;
+                    } catch (Exception ignored) {}
+                }
+                // fallback for DLS or unknown win margins
+                if (marginType == null) {
+                    marginType = MarginType.UNKNOWN;
+                }
+            }
+        } else if (statusNote != null) {
+            if (statusNote.toLowerCase().contains("tie")) {
+                result = Result.TIE;
+            } else if (statusNote.toLowerCase().contains("no result")) {
+                result = Result.NO_RESULT;
+            } else if (statusNote.toLowerCase().contains("draw")) {
+                result = Result.DRAW;
+            } else {
+                throw new RuntimeException("unexpected result type");
+            }
+        } else {
+            throw new RuntimeException("unexpected result type");
+        }
+
+        MatchResult matchResult = new MatchResult(
+                Integer.parseInt(matchID),
+                DataSource.CRICAPI,
+                0, // winner TeamID to be set after matching with DB
+                0, // toss winner TeamID to be set later
+                tossDecision,
+                marginSize,
+                marginType,
+                result,
+                winningTeamKey
+        );
+
+        // get match
+        // dateStr already assigned earlier in method for a safety check
+        String dtGmt = (String) ParseJSON.getValueFromMap("data/dateTimeGMT", matchInfoMap);
+        if (dtGmt != null && dtGmt.length() >= 10) {
+            dateStr = dtGmt.substring(0, 10);
+        }
+        LocalDate date = LocalDate.parse(dateStr);
+
+        CricketMatch match = new CricketMatch(
+                Integer.parseInt(matchID),
+                DataSource.CRICAPI,
+                date,
+                0, // venueID to be filled by DB lookup
+                format,
+                venueKey
+        );
+
+        // get match teams
+        List<MatchTeam> matchTeams = new ArrayList<>();
+        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICAPI, 0, new TeamKey(teams.get(0).getName())));
+        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICAPI, 0, new TeamKey(teams.get(1).getName())));
+
+        // build schema
+        return new CricketMatchDataSchema(
+                null,
+                teams,
+                List.of(new Venue(0, venueKey)),
+                null,
+                List.of(matchResult),
+                List.of(match),
+                matchTeams
+        );
     }
 }
