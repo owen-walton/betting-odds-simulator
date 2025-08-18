@@ -75,13 +75,3 @@ CREATE TABLE CricketMatchData.MatchTeam
     FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
     FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID)
 );
-
-CREATE TABLE CricketMatchData.VenueAlias
-(
-    VenueAliasID INT AUTO_INCREMENT PRIMARY KEY,
-    VenueID INT NOT NULL,
-    AliasGroundName VARCHAR(80) NOT NULL,
-    AliasCity VARCHAR(50) NOT NULL,
-    FOREIGN KEY (VenueID) REFERENCES CricketMatchData.Venue(VenueID),
-    UNIQUE (AliasGroundName, AliasCity)
-);

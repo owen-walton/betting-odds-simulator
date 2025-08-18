@@ -16,6 +16,7 @@ public class VenueNormaliser {
         }
 
         String result = input.trim();
+        result = result.replaceAll("-", " ");
 
         // remove punctuation
         StringBuilder sb = new StringBuilder();
