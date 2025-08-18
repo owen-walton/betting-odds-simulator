@@ -1,7 +1,7 @@
 package com.betwise.oddscalc.entity;
 
 public class MatchResult {
-    private int matchID;
+    private String matchID;
     private DataSource dataSource;
     private Integer winningTeamID; // nullable for draw/no result
     private int tossWinningTeamID;
@@ -11,7 +11,7 @@ public class MatchResult {
     private Result result;
     private TeamKey winningTeamNaturalKey;
 
-    public MatchResult(int matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result) {
+    public MatchResult(String matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result) {
         this.matchID = matchID;
         this.dataSource = dataSource;
         this.winningTeamID = winningTeamID;
@@ -22,7 +22,7 @@ public class MatchResult {
         this.result = result;
     }
 
-    public MatchResult(int matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result, TeamKey winningTeamNaturalKey) {
+    public MatchResult(String matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result, TeamKey winningTeamNaturalKey) {
         this.matchID = matchID;
         this.dataSource = dataSource;
         this.winningTeamID = winningTeamID;
@@ -34,11 +34,11 @@ public class MatchResult {
         this.winningTeamNaturalKey = winningTeamNaturalKey;
     }
 
-    public int getMatchID() {
+    public String getMatchID() {
         return matchID;
     }
 
-    public void setMatchID(int matchID) {
+    public void setMatchID(String matchID) {
         this.matchID = matchID;
     }
 

@@ -3,14 +3,14 @@ package com.betwise.oddscalc.entity;
 import java.time.LocalDate;
 
 public class CricketMatch {
-    private int matchID;
+    private String matchID;
     private LocalDate startDate;
     private DataSource dataSource;
     private String formatName;
     private int venueID;
     private VenueKey venueNaturalKey;
 
-    public CricketMatch(int matchID, DataSource dataSource, LocalDate startDate, int venueID, String formatName, VenueKey venueNaturalKey) {
+    public CricketMatch(String matchID, DataSource dataSource, LocalDate startDate, int venueID, String formatName, VenueKey venueNaturalKey) {
         this.matchID = matchID;
         this.dataSource = dataSource;
         this.startDate = startDate;
@@ -19,11 +19,11 @@ public class CricketMatch {
         this.venueNaturalKey = venueNaturalKey;
     }
 
-    public int getMatchID() {
+    public String getMatchID() {
         return matchID;
     }
 
-    public void setMatchID(int matchID) {
+    public void setMatchID(String matchID) {
         this.matchID = matchID;
     }
 

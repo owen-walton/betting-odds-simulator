@@ -28,7 +28,7 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
                 "VALUES (?, ?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setInt(1, matchTeam.getMatchID());
+            statement.setString(1, matchTeam.getMatchID());
             statement.setString(2, matchTeam.getDataSource().name());
             statement.setInt(3, matchTeam.getTeamID());
 
@@ -54,7 +54,7 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
              PreparedStatement statement = conn.prepareStatement(sql)) {
 
             for (MatchTeam matchTeam : matchTeams) {
-                statement.setInt(1, matchTeam.getMatchID());
+                statement.setString(1, matchTeam.getMatchID());
                 statement.setString(2, matchTeam.getDataSource().name());
                 statement.setInt(3, matchTeam.getTeamID());
                 statement.addBatch();

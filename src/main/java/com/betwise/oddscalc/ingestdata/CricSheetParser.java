@@ -132,7 +132,7 @@ public class CricSheetParser {
         }
 
         MatchResult matchResult = new MatchResult(
-                Integer.parseInt(matchID),
+                matchID,
                 DataSource.CRICSHEET,
                 0,
                 0,
@@ -146,7 +146,7 @@ public class CricSheetParser {
         // get match
         List<String> matchDates = (List<String>) ParseJSON.getValueFromMap("info/dates", matchInfoMap);
         CricketMatch match = new CricketMatch(
-                Integer.parseInt(matchID),
+                matchID,
                 DataSource.CRICSHEET,
                 LocalDate.parse(matchDates.get(0)),
                 0,
@@ -156,8 +156,8 @@ public class CricSheetParser {
 
         // get match teams
         List<MatchTeam> matchTeams = new ArrayList<>();
-        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICSHEET, 0, new TeamKey(teams.get(0).getName())));
-        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICSHEET, 0, new TeamKey(teams.get(1).getName())));
+        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICSHEET, 0, new TeamKey(teams.get(0).getName())));
+        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICSHEET, 0, new TeamKey(teams.get(1).getName())));
 
         // build all information about match into schema object
         CricketMatchDataSchema tempSchema = new CricketMatchDataSchema(

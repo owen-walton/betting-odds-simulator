@@ -28,7 +28,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setInt(1, matchResult.getMatchID());
+            statement.setString(1, matchResult.getMatchID());
 
             statement.setString(2, matchResult.getDataSource().name());
 
@@ -83,7 +83,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
 
             // build bulk insert
             for (MatchResult matchResult : matchResults) {
-                statement.setInt(1, matchResult.getMatchID());
+                statement.setString(1, matchResult.getMatchID());
 
                 statement.setString(2, matchResult.getDataSource().name());
 

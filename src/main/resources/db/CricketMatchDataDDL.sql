@@ -40,7 +40,7 @@ CREATE TABLE CricketMatchData.TeamHomeVenue
 -- MATCH is a reserved sql keyword
 CREATE TABLE CricketMatchData.CricketMatch
 (
-    MatchID INT NOT NULL,
+    MatchID VARCHAR(40) NOT NULL,
     DataSource ENUM('CRICSHEET') NOT NULL,
     FormatName VARCHAR(10) NOT NULL,
     VenueID INT NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE CricketMatchData.CricketMatch
 
 CREATE TABLE CricketMatchData.MatchResult
 (
-    MatchID INT,
+    MatchID VARCHAR(40),
     DataSource ENUM('CRICSHEET'),
     WinningTeamID INT, -- if draw or no result then nullable
     TossWinningTeamID INT NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE CricketMatchData.MatchResult
 CREATE TABLE CricketMatchData.MatchTeam
 (
     MatchTeamID INT AUTO_INCREMENT PRIMARY KEY,
-    MatchID INT NOT NULL,
+    MatchID VARCHAR(40) NOT NULL,
     DataSource ENUM('CRICSHEET') NOT NULL,
     TeamID INT NOT NULL,
     FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),

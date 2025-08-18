@@ -2,19 +2,19 @@ package com.betwise.oddscalc.entity;
 
 public class MatchTeam {
     private int matchTeamID;
-    private int matchID;
+    private String matchID;
     private DataSource dataSource;
     private int teamID;
     private TeamKey teamNaturalKey;
 
-    public MatchTeam(int matchTeamID, int matchID, DataSource dataSource, int teamID) {
+    public MatchTeam(int matchTeamID, String matchID, DataSource dataSource, int teamID) {
         this.matchTeamID = matchTeamID;
         this.matchID = matchID;
         this.dataSource = dataSource;
         this.teamID = teamID;
     }
 
-    public MatchTeam(int matchTeamID, int matchID, DataSource dataSource, int teamID, TeamKey teamNaturalKey) {
+    public MatchTeam(int matchTeamID, String matchID, DataSource dataSource, int teamID, TeamKey teamNaturalKey) {
         this.matchTeamID = matchTeamID;
         this.matchID = matchID;
         this.dataSource = dataSource;
@@ -30,11 +30,11 @@ public class MatchTeam {
         this.matchTeamID = matchTeamID;
     }
 
-    public int getMatchID() {
+    public String getMatchID() {
         return matchID;
     }
 
-    public void setMatchID(int matchID) {
+    public void setMatchID(String matchID) {
         this.matchID = matchID;
     }
 

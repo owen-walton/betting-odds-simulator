@@ -100,12 +100,17 @@ public class CricAPIClient {
         // double check match is completed and correct date
         String status = (String) ParseJSON.getValueFromMap("data/status", matchInfoMap);
         String dateStr = (String) ParseJSON.getValueFromMap("data/date", matchInfoMap);
+        // dateStr already assigned earlier in method for a safety check
+        String dtGmt = (String) ParseJSON.getValueFromMap("data/dateTimeGMT", matchInfoMap);
+        if (dtGmt != null && dtGmt.length() >= 10) {
+            dateStr = dtGmt.substring(0, 10);
+        }
         if (status == null || dateStr == null) {
-            throw new RuntimeException("Missing status or date in match details for matchID=" + matchID);
+            throw new RuntimeException("Missing status or date in json");
         }
         LocalDate matchDate = LocalDate.parse(dateStr);
         if (!"Completed".equalsIgnoreCase(status) || matchDate.isBefore(fromDate)) {
-            return new CricketMatchDataSchema(); // empty schema, effectively skip this match
+            return new CricketMatchDataSchema(); // skip match
         }
 
         // get match format
@@ -193,7 +198,7 @@ public class CricAPIClient {
         }
 
         MatchResult matchResult = new MatchResult(
-                Integer.parseInt(matchID),
+                matchID,
                 DataSource.CRICAPI,
                 0, // winner TeamID to be set after matching with DB
                 0, // toss winner TeamID to be set later
@@ -205,17 +210,10 @@ public class CricAPIClient {
         );
 
         // get match
-        // dateStr already assigned earlier in method for a safety check
-        String dtGmt = (String) ParseJSON.getValueFromMap("data/dateTimeGMT", matchInfoMap);
-        if (dtGmt != null && dtGmt.length() >= 10) {
-            dateStr = dtGmt.substring(0, 10);
-        }
-        LocalDate date = LocalDate.parse(dateStr);
-
         CricketMatch match = new CricketMatch(
-                Integer.parseInt(matchID),
+                matchID,
                 DataSource.CRICAPI,
-                date,
+                matchDate,
                 0, // venueID to be filled by DB lookup
                 format,
                 venueKey
@@ -223,8 +221,8 @@ public class CricAPIClient {
 
         // get match teams
         List<MatchTeam> matchTeams = new ArrayList<>();
-        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICAPI, 0, new TeamKey(teams.get(0).getName())));
-        matchTeams.add(new MatchTeam(0, Integer.parseInt(matchID), DataSource.CRICAPI, 0, new TeamKey(teams.get(1).getName())));
+        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(0).getName())));
+        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(1).getName())));
 
         // build schema
         return new CricketMatchDataSchema(

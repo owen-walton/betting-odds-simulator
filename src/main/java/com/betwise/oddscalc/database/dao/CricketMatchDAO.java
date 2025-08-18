@@ -27,7 +27,7 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
 
         // use prepared statement for SQL safety
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
-            statement.setInt(1, cricketMatch.getMatchID());
+            statement.setString(1, cricketMatch.getMatchID());
             statement.setString(2, cricketMatch.getDataSource().name());
             statement.setString(3, cricketMatch.getFormatName()); // Assuming enum name matches FormatName
             statement.setInt(4, cricketMatch.getVenueID());
@@ -53,7 +53,7 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
 
             // build bulk insert
             for (CricketMatch cricketMatch : cricketMatches) {
-                statement.setInt(1, cricketMatch.getMatchID());
+                statement.setString(1, cricketMatch.getMatchID());
                 statement.setString(2, cricketMatch.getDataSource().name());
                 statement.setString(3, cricketMatch.getFormatName()); // Assuming enum name matches FormatName
                 statement.setInt(4, cricketMatch.getVenueID());
