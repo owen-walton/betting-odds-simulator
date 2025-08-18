@@ -23,11 +23,10 @@ public class CricSheetParser {
         double index = 0.0;
         double size = matchIDs.size();
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
-        VenueNormaliser venueNormaliser = new VenueNormaliser();
         for (String matchID : matchIDs) {
             long start = System.currentTimeMillis();
 
-            internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons, venueNormaliser));
+            internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons));
 
             long end = System.currentTimeMillis();
             System.out.println("Parsed in " + (end - start) + "ms");
@@ -38,7 +37,7 @@ public class CricSheetParser {
         return internationalCricketData;
     }
 
-    public CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons, VenueNormaliser venueNormaliser) {
+    public CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons) {
 
         Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(joinStringList(allMatchJsons.get(matchID)), Set.of("innings", "meta"));
 
@@ -72,7 +71,7 @@ public class CricSheetParser {
                 city = "";
             }
         }
-        VenueKey venueKey = venueNormaliser.normaliseVenueKey(new VenueKey(ground, city));
+        VenueKey venueKey = VenueNormaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
         TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {

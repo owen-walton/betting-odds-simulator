@@ -2,15 +2,15 @@ package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.VenueKey;
 
-public class VenueNormaliser {
-    public VenueNormaliser() {
+public final class VenueNormaliser {
+    private VenueNormaliser() {
     }
 
-    public VenueKey normaliseVenueKey(VenueKey venueKey) {
+    public static VenueKey normaliseVenueKey(VenueKey venueKey) {
         return new VenueKey(normalise(venueKey.groundName()), normalise(venueKey.city()));
     }
 
-    public String normalise(String input) {
+    public static String normalise(String input) {
         if (input == null) {
             return "";
         }
