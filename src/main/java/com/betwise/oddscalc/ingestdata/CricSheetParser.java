@@ -45,7 +45,10 @@ public class CricSheetParser {
         // other formats like IT20 and ODM are unofficial matches which are to be disregarded and not returned
         // this is done at start of method to save unnecessary computation if returning nothing
         String matchFormat = (String) ParseJSON.getValueFromMap("info/match_type", matchInfoMap);
-        if (matchFormat == null || (!matchFormat.equals("Test") && !matchFormat.equals("T20") && !matchFormat.equals("ODI"))) {
+        if (matchFormat == null ||
+                (!matchFormat.equalsIgnoreCase("Test") &&
+                !matchFormat.equalsIgnoreCase("T20") &&
+                !matchFormat.equalsIgnoreCase("ODI"))) {
             return new CricketMatchDataSchema();
         }
 
