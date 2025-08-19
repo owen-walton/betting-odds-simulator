@@ -10,6 +10,7 @@ public class MatchResult {
     private MarginType marginType;
     private Result result;
     private TeamKey winningTeamNaturalKey;
+    private TeamKey tossWinningTeamNaturalKey;
 
     public MatchResult(String matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result) {
         this.matchID = matchID;
@@ -22,7 +23,7 @@ public class MatchResult {
         this.result = result;
     }
 
-    public MatchResult(String matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result, TeamKey winningTeamNaturalKey) {
+    public MatchResult(String matchID, DataSource dataSource, Integer winningTeamID, int tossWinningTeamID, TossDecision tossDecision, Integer marginSize, MarginType marginType, Result result, TeamKey winningTeamNaturalKey, TeamKey tossWinningTeamNaturalKey) {
         this.matchID = matchID;
         this.dataSource = dataSource;
         this.winningTeamID = winningTeamID;
@@ -32,6 +33,7 @@ public class MatchResult {
         this.marginType = marginType;
         this.result = result;
         this.winningTeamNaturalKey = winningTeamNaturalKey;
+        this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
     public String getMatchID() {
@@ -104,5 +106,13 @@ public class MatchResult {
 
     public void setWinningTeamNaturalKey(TeamKey winningTeamNaturalKey) {
         this.winningTeamNaturalKey = winningTeamNaturalKey;
+    }
+
+    public TeamKey getTossWinningTeamNaturalKey() {
+        return tossWinningTeamNaturalKey;
+    }
+
+    public void setTossWinningTeamNaturalKey(TeamKey tossWinningTeamNaturalKey) {
+        this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 }

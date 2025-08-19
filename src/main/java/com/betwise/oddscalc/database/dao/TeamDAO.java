@@ -64,6 +64,24 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
     }
 
+    public Set<String> getAllTeamNames() {
+        Set<String> names = new HashSet<>();
+        String sql = "SELECT Name FROM Team";
+
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                names.add(rs.getString("Name"));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load all team names", e);
+        }
+
+        return names;
+    }
+
     @Override
     public boolean insert(Team team) {
         String sql = "INSERT INTO Team (Name) VALUES (?)";

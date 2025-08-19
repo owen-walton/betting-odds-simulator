@@ -2,14 +2,30 @@ package com.betwise.oddscalc.service;
 
 import com.betwise.oddscalc.database.dao.*;
 import com.betwise.oddscalc.entity.*;
+import com.betwise.oddscalc.ingestdata.CricAPIClient;
 import com.betwise.oddscalc.ingestdata.CricSheetParser;
+import com.betwise.oddscalc.ingestdata.ingestutils.HTTPClient;
 import com.betwise.oddscalc.ingestdata.ingestutils.VenueDeduplicator;
 
+import java.io.IOException;
 import java.util.*;
 
 public class IngestionService {
     public IngestionService() {
 
+    }
+
+    public void ingestCountries() {
+        CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), null);
+        try (TeamDAO teamDAO = new TeamDAO()) {
+            List<Team> teams = new ArrayList<>();
+            for (String country : cricAPIClient.loadInternationalCountries()) {
+                teams.add(new Team(0, country));
+            }
+            teamDAO.bulkInsertIfNotExists(teams);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void ingest() {

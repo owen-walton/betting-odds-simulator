@@ -74,6 +74,7 @@ public class CricSheetParser {
         VenueKey venueKey = Normaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
+        TeamKey tossWinningTeamKey = new TeamKey((String)ParseJSON.getValueFromMap("info/toss/winner", matchInfoMap));
         TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {
             case "bat" -> TossDecision.BAT;
             case "field" -> TossDecision.FIELD;
@@ -140,7 +141,8 @@ public class CricSheetParser {
                 marginSize,
                 marginType,
                 result,
-                winningTeamKey
+                winningTeamKey,
+                tossWinningTeamKey
         );
 
         // get match

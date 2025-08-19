@@ -114,6 +114,9 @@ public class CricketMatchDataSchema {
             if (key.equals(matchResult.getWinningTeamNaturalKey())) {
                 matchResult.setWinningTeamID(team.getTeamID());
             }
+            if (key.equals(matchResult.getTossWinningTeamNaturalKey())) {
+                matchResult.setTossWinningTeamID(team.getTeamID());
+            }
         }
     }
 
@@ -150,5 +153,18 @@ public class CricketMatchDataSchema {
         if (tempSchema.getMatchTeams() != null) {
             this.matchTeams.addAll(tempSchema.getMatchTeams());
         }
+    }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("CricketMatchDataSchema {")
+                .append("\n  matchFormats: ").append(matchFormats)
+                .append("\n  teams: ").append(teams)
+                .append("\n  venues: ").append(venues)
+                .append("\n  teamHomeVenues: ").append(teamHomeVenues)
+                .append("\n  cricketMatches: ").append(cricketMatches)
+                .append("\n  matchResults: ").append(matchResults)
+                .append("\n  matchTeams: ").append(matchTeams)
+                .append("\n}");
+        return sb.toString();
     }
 }
