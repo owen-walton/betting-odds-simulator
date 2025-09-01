@@ -107,7 +107,7 @@ public class CricketMatchDataSchema {
         }
 
         for (MatchResult matchResult : getMatchResults()) {
-            if (matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
+            if (matchResult.getWinningTeamNaturalKey() != null && matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
                 matchResult.setWinningTeamID(team.getTeamID());
             }
             if (matchResult.getTossWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {

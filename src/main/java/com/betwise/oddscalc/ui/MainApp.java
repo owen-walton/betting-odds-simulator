@@ -13,12 +13,7 @@ public class MainApp {
 
     public static void main(String[] args) throws IOException {
         IngestionService ingestionService = new IngestionService();
-        CricAPIClient cricAPIClient;
-        try (TeamDAO teamDAO = new TeamDAO()) {
-            cricAPIClient = new CricAPIClient(new HTTPClient(), teamDAO.getAllTeamNames());
-        }
-        System.out.println(cricAPIClient.parseAllMatchesWithin7DaysSince(LocalDate.EPOCH));
-        // ingestionService.uploadCricketMatchDataSchema();
+        ingestionService.ingest();
 
     }
 }
