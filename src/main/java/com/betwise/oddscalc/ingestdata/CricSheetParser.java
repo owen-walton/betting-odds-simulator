@@ -74,7 +74,7 @@ public class CricSheetParser {
         VenueKey venueKey = Normaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
-        TeamKey tossWinningTeamKey = new TeamKey((String)ParseJSON.getValueFromMap("info/toss/winner", matchInfoMap));
+        TeamKey tossWinningTeamKey = new TeamKey(Normaliser.normalise((String)ParseJSON.getValueFromMap("info/toss/winner", matchInfoMap)));
         TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {
             case "bat" -> TossDecision.BAT;
             case "field" -> TossDecision.FIELD;
@@ -90,7 +90,7 @@ public class CricSheetParser {
         TeamKey winningTeamKey;
         if (strResult == null) {
             result = Result.WIN;
-            winningTeamKey = new TeamKey((String)ParseJSON.getValueFromMap("info/outcome/winner", matchInfoMap));
+            winningTeamKey = new TeamKey(Normaliser.normalise((String)ParseJSON.getValueFromMap("info/outcome/winner", matchInfoMap)));
         } else {
             if (strResult.equalsIgnoreCase("tie")) {
                 String winner = (String) ParseJSON.getValueFromMap("info/outcome/eliminator", matchInfoMap);
@@ -151,21 +151,21 @@ public class CricSheetParser {
                 matchID,
                 DataSource.CRICSHEET,
                 LocalDate.parse(matchDates.get(0)),
-                0,
+                -1,
                 matchFormat,
                 venueKey
         );
 
         // get match teams
         List<MatchTeam> matchTeams = new ArrayList<>();
-        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICSHEET, 0, new TeamKey(teams.get(0).getName())));
-        matchTeams.add(new MatchTeam(0, matchID, DataSource.CRICSHEET, 0, new TeamKey(teams.get(1).getName())));
+        matchTeams.add(new MatchTeam(-1, matchID, DataSource.CRICSHEET, -1, new TeamKey(teams.get(0).getName())));
+        matchTeams.add(new MatchTeam(-1, matchID, DataSource.CRICSHEET, -1, new TeamKey(teams.get(1).getName())));
 
         // build all information about match into schema object
         CricketMatchDataSchema tempSchema = new CricketMatchDataSchema(
                 null, // match formats are added in DDL so doesn't matter
                 teams,
-                List.of(new Venue(0, venueKey)),
+                List.of(new Venue(-1, venueKey)),
                 null,
                 List.of(matchResult),
                 List.of(match),

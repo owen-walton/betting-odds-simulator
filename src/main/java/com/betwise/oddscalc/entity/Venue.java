@@ -27,6 +27,11 @@ public class Venue {
         return new VenueKey(this.groundName, this.city);
     }
 
+    public void setVenueKey(VenueKey venueKey) {
+        this.groundName = venueKey.groundName();
+        this.city = venueKey.city();
+    }
+
     public int getVenueID() {
         return venueID;
     }
