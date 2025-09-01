@@ -115,4 +115,20 @@ public class MatchResult {
     public void setTossWinningTeamNaturalKey(TeamKey tossWinningTeamNaturalKey) {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
+
+    @Override
+    public String toString() {
+        return "MatchResult{" +
+                "matchID='" + matchID + '\'' +
+                ", dataSource=" + (dataSource != null ? dataSource.name() : "null") +
+                ", winningTeamID=" + (winningTeamID != null ? winningTeamID : "null") +
+                ", tossWinningTeamID=" + tossWinningTeamID +
+                ", tossDecision=" + (tossDecision != null ? tossDecision.name() : "null") +
+                ", marginSize=" + (marginSize != null ? marginSize : "null") +
+                ", marginType=" + (marginType != null ? marginType.name() : "null") +
+                ", result=" + (result != null ? result.name() : "null") +
+                ", winningTeamNaturalKey=" + (winningTeamNaturalKey != null ? winningTeamNaturalKey.toString() : "null") +
+                ", tossWinningTeamNaturalKey=" + (tossWinningTeamNaturalKey != null ? tossWinningTeamNaturalKey.toString() : "null") +
+                '}';
+    }
 }

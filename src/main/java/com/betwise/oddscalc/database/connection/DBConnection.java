@@ -43,6 +43,7 @@ public class DBConnection {
                 // load the driver class explicitly
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 conn = DriverManager.getConnection(this.dbURL, this.dbUser, this.dbPassword);
+                conn.setAutoCommit(false);
             }
 
         } catch (Exception e) {

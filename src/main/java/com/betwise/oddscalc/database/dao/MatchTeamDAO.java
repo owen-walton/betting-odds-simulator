@@ -33,6 +33,7 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
             statement.setInt(3, matchTeam.getTeamID());
 
             statement.executeUpdate();
+            dbConnection.getConn().commit();
             return true;
 
         } catch (Exception e) {
@@ -47,7 +48,7 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT IGNORE INTO MatchTeam (MatchID, DataSource, TeamID) " +
+        String sql = "INSERT INTO MatchTeam (MatchID, DataSource, TeamID) " +
                 "VALUES (?, ?, ?)";
 
         try (Connection conn = dbConnection.getConn();
@@ -61,6 +62,7 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
             }
 
             statement.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

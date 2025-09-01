@@ -29,6 +29,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
             statement.setInt(2, teamHomeVenue.venueID());
 
             statement.executeUpdate();
+            dbConnection.getConn().commit();
             return true;
 
         } catch (Exception e) {
@@ -43,7 +44,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
             return;
         }
 
-        String sql = "INSERT IGNORE INTO TeamHomeVenue (TeamID, VenueID) " +
+        String sql = "INSERT INTO TeamHomeVenue (TeamID, VenueID) " +
                 "VALUES (?, ?)";
 
         try (Connection conn = dbConnection.getConn();
@@ -56,6 +57,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
             }
 
             statement.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

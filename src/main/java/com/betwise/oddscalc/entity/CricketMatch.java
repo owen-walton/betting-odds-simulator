@@ -66,4 +66,16 @@ public class CricketMatch {
     public void setVenueNaturalKey(VenueKey venueNaturalKey) {
         this.venueNaturalKey = venueNaturalKey;
     }
+
+    @Override
+    public String toString() {
+        return "CricketMatch{" +
+                "matchID='" + matchID + '\'' +
+                ", startDate=" + startDate +
+                ", dataSource=" + (dataSource != null ? dataSource.name() : "null") +
+                ", formatName='" + formatName + '\'' +
+                ", venueID=" + venueID +
+                ", venueNaturalKey=" + (venueNaturalKey != null ? venueNaturalKey.toString() : "null") +
+                '}';
+    }
 }

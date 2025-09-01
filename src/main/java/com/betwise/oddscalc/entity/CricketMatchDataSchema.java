@@ -97,35 +97,33 @@ public class CricketMatchDataSchema {
         this.matchTeams = matchTeams;
     }
 
-    // the natural key field of matchTeam must be initialised
-    // updates foreign key usage of team object with the id in team
     public void updateTeamKey(Team team) {
-        TeamKey key = new TeamKey(team.getName());
+        String teamName = team.getName().trim().toLowerCase();
 
-        // update match team pojo
         for (MatchTeam matchTeam : getMatchTeams()) {
-            if (key.equals(matchTeam.getTeamNaturalKey())) {
+            if (matchTeam.getTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
                 matchTeam.setTeamID(team.getTeamID());
             }
         }
 
-        // update match result pojo
         for (MatchResult matchResult : getMatchResults()) {
-            if (key.equals(matchResult.getWinningTeamNaturalKey())) {
+            if (matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
                 matchResult.setWinningTeamID(team.getTeamID());
             }
-            if (key.equals(matchResult.getTossWinningTeamNaturalKey())) {
+            if (matchResult.getTossWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
                 matchResult.setTossWinningTeamID(team.getTeamID());
             }
         }
     }
 
     public void updateVenueKey(Venue venue) {
-        VenueKey key = new VenueKey(venue.getGroundName(), venue.getCity());
+        String ground = venue.getGroundName().trim().toLowerCase();
+        String city = venue.getCity().trim().toLowerCase();
 
-        // update cricket match pojo
         for (CricketMatch cricketMatch : getCricketMatches()) {
-            if (key.equals(cricketMatch.getVenueNaturalKey())) {
+            VenueKey vk = cricketMatch.getVenueNaturalKey();
+            if (vk.groundName().trim().toLowerCase().equals(ground) &&
+                    vk.city().trim().toLowerCase().equals(city)) {
                 cricketMatch.setVenueID(venue.getVenueID());
             }
         }

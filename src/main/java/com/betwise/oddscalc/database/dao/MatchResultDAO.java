@@ -60,6 +60,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
             }
 
             statement.executeUpdate();
+            dbConnection.getConn().commit();
             return true;
 
         } catch (Exception e) {
@@ -74,7 +75,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT IGNORE INTO MatchResult " +
+        String sql = "INSERT INTO MatchResult " +
                 "(MatchID, DataSource, WinningTeamID, TossWinningTeamID, TossDecision, Result, MarginSize, MarginType)" +
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -118,6 +119,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
 
             // executed bulk insert
             statement.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

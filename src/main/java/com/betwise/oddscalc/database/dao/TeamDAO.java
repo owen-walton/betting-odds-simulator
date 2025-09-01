@@ -90,6 +90,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
             statement.setString(1, team.getName());
 
             statement.executeUpdate();
+            dbConnection.getConn().commit();
             return true;
 
         } catch (Exception e) {
@@ -164,7 +165,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT IGNORE INTO Team (Name) VALUES (?)";
+        String sql = "INSERT INTO Team (Name) VALUES (?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -177,6 +178,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
             // executed bulk insert
             preparedStatement.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

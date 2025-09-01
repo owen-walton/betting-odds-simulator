@@ -41,7 +41,7 @@ CREATE TABLE CricketMatchData.TeamHomeVenue
 CREATE TABLE CricketMatchData.CricketMatch
 (
     MatchID VARCHAR(40) NOT NULL,
-    DataSource ENUM('CRICSHEET') NOT NULL,
+    DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
     FormatName VARCHAR(10) NOT NULL,
     VenueID INT NOT NULL,
     StartDate DATE NOT NULL,
@@ -53,11 +53,11 @@ CREATE TABLE CricketMatchData.CricketMatch
 CREATE TABLE CricketMatchData.MatchResult
 (
     MatchID VARCHAR(40),
-    DataSource ENUM('CRICSHEET'),
+    DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
     WinningTeamID INT, -- if draw or no result then nullable
     TossWinningTeamID INT NOT NULL,
     TossDecision ENUM('Bat', 'Field') NOT NULL,
-    Result ENUM('Win', 'Draw', 'No Result'),
+    Result ENUM('Win', 'Draw', 'No Result', 'Tie', 'Win In Bowl Off', ' Win In Super Over'),
     MarginSize INT, -- how many runs/wickets won by
     MarginType ENUM('Wickets', 'Runs'),
     PRIMARY KEY (MatchID, DataSource),
@@ -70,7 +70,7 @@ CREATE TABLE CricketMatchData.MatchTeam
 (
     MatchTeamID INT AUTO_INCREMENT PRIMARY KEY,
     MatchID VARCHAR(40) NOT NULL,
-    DataSource ENUM('CRICSHEET') NOT NULL,
+    DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
     TeamID INT NOT NULL,
     FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
     FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID)

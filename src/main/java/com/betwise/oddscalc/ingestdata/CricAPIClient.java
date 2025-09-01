@@ -33,7 +33,7 @@ public class CricAPIClient {
             }
 
             cricapiProps.load(input);
-            return cricapiProps.getProperty("apikey3");
+            return cricapiProps.getProperty("apikey2");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -262,11 +262,11 @@ public class CricAPIClient {
 
         // get teams
         List<Team> teams = new ArrayList<>();
-        String homeTeamName = ((List<String>) matchInfoMap.get("teams")).get(0);
-        String awayTeamName = ((List<String>) matchInfoMap.get("teams")).get(1);
+        String homeTeamName = Normaliser.normalise(((List<String>) matchInfoMap.get("teams")).get(0));
+        String awayTeamName = Normaliser.normalise(((List<String>) matchInfoMap.get("teams")).get(1));
         teams.add(new Team(0, homeTeamName));
         teams.add(new Team(0, awayTeamName));
-        if (homeTeamName == null || awayTeamName == null) {
+        if (homeTeamName.isEmpty() || awayTeamName.isEmpty()) {
             return new CricketMatchDataSchema();
         }
 
@@ -337,8 +337,8 @@ public class CricAPIClient {
         MatchResult matchResult = new MatchResult(
                 matchID,
                 DataSource.CRICAPI,
-                0, // winner TeamID to be set after matching with DB
-                0, // toss winner TeamID to be set later
+                -1, // winner TeamID to be set after matching with DB
+                -1, // toss winner TeamID to be set later
                 tossDecision,
                 marginSize,
                 marginType,
@@ -352,43 +352,24 @@ public class CricAPIClient {
                 matchID,
                 DataSource.CRICAPI,
                 matchDate,
-                0, // venueID to be filled by DB lookup
+                -1, // venueID to be filled by DB lookup
                 format,
                 venueKey
         );
 
         // get match teams
         List<MatchTeam> matchTeams = new ArrayList<>();
-        matchTeams.
-
-                add(new
-
-                        MatchTeam(0, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(0).
-
-                        getName())));
-        matchTeams.
-
-                add(new
-
-                        MatchTeam(0, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(1).
-
-                        getName())));
+        matchTeams.add(new MatchTeam(-1, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(0).getName())));
+        matchTeams.add(new MatchTeam(-1, matchID, DataSource.CRICAPI, 0, new TeamKey(teams.get(1).getName())));
 
         // build schema
-        return new
-
-                CricketMatchDataSchema(
+        return new CricketMatchDataSchema(
                 null,
                 teams,
-                List.of(new Venue(0, venueKey)),
+                List.of(new Venue(-1, venueKey)),
                 null,
-                List.
-
-                        of(matchResult),
-                List.
-
-                        of(match),
-
+                List.of(matchResult),
+                List.of(match),
                 matchTeams
         );
     }
