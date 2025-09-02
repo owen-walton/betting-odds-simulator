@@ -174,7 +174,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT IGNORE INTO Venue (GroundName, City) " +
+        String sql = "INSERT INTO Venue (GroundName, City) " +
                 "VALUES (?, ?)";
 
         try (Connection conn = dbConnection.getConn();
@@ -225,6 +225,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             }
 
             ps.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
