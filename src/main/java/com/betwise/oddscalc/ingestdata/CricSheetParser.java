@@ -24,14 +24,7 @@ public class CricSheetParser {
         double size = matchIDs.size();
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
         for (String matchID : matchIDs) {
-            long start = System.currentTimeMillis();
-
             internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons));
-
-            long end = System.currentTimeMillis();
-            System.out.println("Parsed in " + (end - start) + "ms");
-            index = index + 1;
-            System.out.println("Batch " + (index / size) * 100.0 + "% complete");
         }
 
         return internationalCricketData;
@@ -55,7 +48,7 @@ public class CricSheetParser {
         List<String> teamNames = (List<String>) ParseJSON.getValueFromMap("info/teams", matchInfoMap);
         List<Team> teams = new ArrayList<>();
         for (String name : teamNames) {
-            teams.add(new Team(0, name));
+            teams.add(new Team(-1, name));
         }
 
         // get venues
@@ -135,8 +128,8 @@ public class CricSheetParser {
         MatchResult matchResult = new MatchResult(
                 matchID,
                 DataSource.CRICSHEET,
-                0,
-                0,
+                -1,
+                -1,
                 tossDecision,
                 marginSize,
                 marginType,

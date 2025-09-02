@@ -84,9 +84,8 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
             }
 
             // executed bulk insert
-            int[] counts = statement.executeBatch();
+            statement.executeBatch();
             conn.commit();
-            System.out.println("insert counts = " + Arrays.toString(counts) + ", autoCommit=" + conn.getAutoCommit());
 
         } catch (Exception e) {
             throw new RuntimeException(e);
