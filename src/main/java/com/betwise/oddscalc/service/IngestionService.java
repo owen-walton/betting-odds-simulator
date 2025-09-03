@@ -61,7 +61,10 @@ public class IngestionService {
             for (Team team : teams) {
                 schema.updateTeamKey(team);
             }
+            // need to handle venue de duplication here
             venueDAO.bulkInsertAndUpdate(schema.getVenues());
+            // updateVenueKey uses natural venue key comparison in other tables and replaces the venueID in that table
+            // so venues list must have the new ids but the old venue key before de duplication applied
             List<Venue> venues = venueDAO.getIDsIntoObjects(schema.getVenues());
             for (Venue venue : venues) {
                 schema.updateVenueKey(venue);
