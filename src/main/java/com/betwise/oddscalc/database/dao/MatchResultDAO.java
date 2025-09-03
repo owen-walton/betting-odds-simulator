@@ -2,7 +2,9 @@ package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
 import com.betwise.oddscalc.entity.CricketMatch;
+import com.betwise.oddscalc.entity.MarginType;
 import com.betwise.oddscalc.entity.MatchResult;
+import com.betwise.oddscalc.entity.Result;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -75,6 +77,9 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
             return;
         }
 
+        for (MatchResult mr : matchResults) {
+
+        }
         String sql = "INSERT INTO MatchResult " +
                 "(MatchID, DataSource, WinningTeamID, TossWinningTeamID, TossDecision, Result, MarginSize, MarginType)" +
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -88,7 +93,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
 
                 statement.setString(2, matchResult.getDataSource().name());
 
-                if (matchResult.getWinningTeamID() != null) {
+                if (matchResult.getWinningTeamID() != null && matchResult.getWinningTeamID() != -1) {
                     statement.setInt(3, matchResult.getWinningTeamID());
                 } else {
                     statement.setNull(3, java.sql.Types.INTEGER);
@@ -112,7 +117,7 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
                 if (matchResult.getMarginType() != null) {
                     statement.setString(8, matchResult.getMarginType().toString());
                 } else {
-                    statement.setNull(8, java.sql.Types.VARCHAR);
+                    statement.setString(8, MarginType.UNKNOWN.toString());
                 }
                 statement.addBatch();
             }

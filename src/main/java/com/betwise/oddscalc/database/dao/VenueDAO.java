@@ -50,37 +50,32 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
 
     public List<Venue> getIDsIntoObjects(List<Venue> venues) {
         List<Venue> newList = new ArrayList<>();
-
-        if (venues.isEmpty()) {
-            return newList;
-        }
-
-        StringBuilder placeholdersBuilder = new StringBuilder();
-        for (int i = 0; i < venues.size(); i++) {
-            placeholdersBuilder.append("(?, ?)");
-            if (i < venues.size() - 1) {
-                placeholdersBuilder.append(", ");
-            }
-        }
-
-        String sql = "SELECT VenueID, GroundName, City FROM Venue WHERE (GroundName, City) IN (" + placeholdersBuilder.toString() + ")";
+        if (venues.isEmpty()) return newList;
 
         try (Connection conn = dbConnection.getConn();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-
-            int index = 1;
-            for (Venue venue : venues) {
-                statement.setString(index++, venue.getGroundName());
-                statement.setString(index++, venue.getCity());
-            }
-
+             PreparedStatement statement = conn.prepareStatement("SELECT VenueID, GroundName, City FROM Venue")) {
+            List<Venue> dbVenues = new ArrayList<>();
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    Venue venue = new Venue();
-                    venue.setVenueID(rs.getInt("VenueID"));
-                    venue.setGroundName(rs.getString("GroundName"));
-                    venue.setCity(rs.getString("City"));
-                    newList.add(venue);
+                    Venue dbVenue = new Venue();
+                    dbVenue.setVenueID(rs.getInt("VenueID"));
+                    dbVenue.setGroundName(rs.getString("GroundName"));
+                    dbVenue.setCity(rs.getString("City"));
+                    dbVenues.add(dbVenue);
+                }
+            }
+
+            for (Venue input : venues) {
+                for (Venue dbVenue : dbVenues) {
+                    if (input.getGroundName().equals(dbVenue.getGroundName()) &&
+                            input.getCity().equals(dbVenue.getCity())) {
+                        Venue matched = new Venue();
+                        matched.setVenueID(dbVenue.getVenueID());
+                        matched.setGroundName(input.getGroundName());
+                        matched.setCity(input.getCity());
+                        newList.add(matched);
+                        break;
+                    }
                 }
             }
 
@@ -90,6 +85,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public boolean insert(Venue venue) {
@@ -187,6 +183,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             }
 
             statement.executeBatch();
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -194,6 +191,8 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
 
     // if venueID is -1 then it will insert the venue
     // if the venueID is already a VenueID in the table it will update the details and keep VenueID
+    // this means that if a more canonical format of an existing venue key is found in ingestion,
+    // then it will update the db record
     public void bulkInsertAndUpdate(List<Venue> venues) {
         venues = removeExisting(venues);
 
