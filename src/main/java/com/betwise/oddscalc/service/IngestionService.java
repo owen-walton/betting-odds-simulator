@@ -53,7 +53,7 @@ public class IngestionService {
                 CricketMatchDAO matchDAO = new CricketMatchDAO();
                 MatchResultDAO resultDAO = new MatchResultDAO();
                 MatchTeamDAO matchTeamDAO = new MatchTeamDAO();
-                VenueDAO venueDAO = new VenueDAO();
+                VenueDAO venueDAO = new VenueDAO()
         ) {
             // insert teams and venues
             teamDAO.bulkInsertIfNotExists(schema.getTeams());
