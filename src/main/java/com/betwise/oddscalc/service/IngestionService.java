@@ -28,7 +28,7 @@ public class IngestionService {
         }
     }
 
-    public void ingest() {
+    public void ingestCricSheet() {
         CricSheetParser cricSheetParser = new CricSheetParser();
         List<String> allMatchIDs = cricSheetParser.getInternationalMatchIDs();
         final int BATCH_SIZE = 500;
