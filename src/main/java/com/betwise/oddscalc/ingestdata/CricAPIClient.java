@@ -33,7 +33,7 @@ public class CricAPIClient {
             }
 
             cricapiProps.load(input);
-            return cricapiProps.getProperty("apikey2");
+            return cricapiProps.getProperty("apikey3");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -145,7 +145,6 @@ public class CricAPIClient {
         String url = String.format("%s/cricScore?apikey=%s", BASE_URL, apiKey);
         String json = httpClient.get(url);
 
-        System.out.println(json);
         Map<String, Object> root = ParseJSON.parseJsonToMap(json);
         List<Map<String, Object>> matches = (List<Map<String, Object>>) root.get("data");
         if (matches == null) {
@@ -159,6 +158,9 @@ public class CricAPIClient {
         for (Map<String, Object> m : matches) {
             // eCricScore returns a text score only for completed games
             String matchStatus = Objects.toString(m.get("ms"));
+            if (m.get("id").equals("44f287d1-a088-4438-9cae-4b70850f4979")) {
+                System.out.println(m);
+            }
             if (!matchStatus.equalsIgnoreCase("result")) {
                 continue;  // upcoming fixture or live game
             }
@@ -179,17 +181,13 @@ public class CricAPIClient {
             String team1name = Normaliser.normalise(t1.split("\\[")[0]);
             String team2name = Normaliser.normalise(t2.split("\\[")[0]);
 
-            System.out.println(t1 + " vs " + t2);
-            System.out.println("'" + team1name + "' & '" + team2name + "'");
             // filter out women’s or non‐international games
             if (team1name.toLowerCase().contains("women")
                     || team2name.toLowerCase().contains("women")
                     || !getCountries().contains(team1name)
                     || !getCountries().contains(team2name)) {
-                System.out.println("true");
                 continue;
             }
-            System.out.println("false");
 
             // collect the match ID
             String id = Objects.toString(m.get("id"), "");
@@ -221,7 +219,7 @@ public class CricAPIClient {
     public CricketMatchDataSchema parseSingleMatch(String matchID, LocalDate fromDate) throws IOException {
         // get json
         String matchJson = getMatchDetailsJson(matchID);
-        System.out.println(matchJson);
+
         // null check
         if (matchJson == null) {
             throw new RuntimeException("Error getting match details");
@@ -231,6 +229,10 @@ public class CricAPIClient {
         Map<String, Object> root = ParseJSON.parseJsonToMap(matchJson);
         Map<String, Object> matchInfoMap = (Map<String, Object>) root.get("data");
 
+        if (((String) matchInfoMap.get("status")).equalsIgnoreCase("There is no scorecard available for this match.")) {
+            return new CricketMatchDataSchema();
+        }
+
         // double check match has correct date
         String dateStr = (String) matchInfoMap.get("date");
         // dateStr already assigned earlier in method for a safety check
@@ -239,7 +241,7 @@ public class CricAPIClient {
             dateStr = dtGmt.substring(0, 10);
         }
         if (dateStr == null) {
-            throw new RuntimeException("Missing status or date in json");
+            throw new RuntimeException("Missing date in json");
         }
         LocalDate matchDate = LocalDate.parse(dateStr);
         if (matchDate.isBefore(fromDate)) {
@@ -279,6 +281,8 @@ public class CricAPIClient {
         // get result
         TeamKey tossWinningTeamKey = new TeamKey((String) matchInfoMap.get("tossWinner"));
         String toss = (String) matchInfoMap.get("tossChoice");
+        System.out.println(matchJson);
+        System.out.println("Raw tossChoice: " + toss);
         TossDecision tossDecision =
                 switch (toss == null ? "" : toss.toLowerCase()) {
                     case "bat" -> TossDecision.BAT;

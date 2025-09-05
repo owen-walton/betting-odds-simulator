@@ -16,7 +16,7 @@ INSERT INTO CricketMatchData.MatchFormat(FormatName, MatchLengthDays) VALUES
 CREATE TABLE CricketMatchData.Team
 (
     TeamID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(50) NOT NULL UNIQUE
+    Name VARCHAR(120) NOT NULL UNIQUE
 );
 
 CREATE TABLE CricketMatchData.Venue
@@ -73,5 +73,6 @@ CREATE TABLE CricketMatchData.MatchTeam
     DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
     TeamID INT NOT NULL,
     FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
-    FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID)
+    FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID),
+    UNIQUE (MatchID, DataSource, TeamID)
 );

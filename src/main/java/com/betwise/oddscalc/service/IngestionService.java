@@ -15,7 +15,7 @@ public class IngestionService {
 
     }
 
-    public void ingestCountries() {
+    public void ingestCountriesFromCricAPI() {
         CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), null);
         try (TeamDAO teamDAO = new TeamDAO()) {
             List<Team> teams = new ArrayList<>();
@@ -26,6 +26,20 @@ public class IngestionService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void updateLast7Days() throws IOException {
+        try (
+                TeamDAO teamDAO = new TeamDAO();
+                CricketMatchDAO cricketMatchDAO = new CricketMatchDAO()
+        ){
+            CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), teamDAO.getAllTeamNames());
+
+            CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1));
+
+            uploadCricketMatchDataSchema(schema);
+        }
+
     }
 
     public void ingestCricSheet() {

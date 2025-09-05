@@ -68,7 +68,12 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
             return;
         }
 
-        String sql = "INSERT INTO CricketMatch (MatchID, DataSource, FormatName, VenueID, StartDate) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO CricketMatch (MatchID, DataSource, FormatName, VenueID, StartDate) VALUES (?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "DataSource = VALUES(DataSource)," +
+                "FormatName = VALUES(FormatName)," +
+                "VenueID = VALUES(VenueID)," +
+                "StartDate = VALUES(StartDate)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {

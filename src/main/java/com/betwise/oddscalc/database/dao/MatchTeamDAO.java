@@ -49,7 +49,11 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
         }
 
         String sql = "INSERT INTO MatchTeam (MatchID, DataSource, TeamID) " +
-                "VALUES (?, ?, ?)";
+                "VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "MatchID = VALUES(MatchID), " +
+                "DataSource = VALUES(DataSource), " +
+                "TeamID = VALUES(TeamID)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {
