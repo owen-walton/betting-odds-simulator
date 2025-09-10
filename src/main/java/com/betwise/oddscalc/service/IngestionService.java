@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class IngestionService {
-    public IngestionService() {
+    public void populateTeamHomeVenue() {
 
     }
 
@@ -63,7 +63,7 @@ public class IngestionService {
         }
     }
 
-    public void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
+    private void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
         try (
                 TeamDAO teamDAO = new TeamDAO();
                 CricketMatchDAO matchDAO = new CricketMatchDAO();
@@ -135,7 +135,7 @@ public class IngestionService {
     }
 
     // bugged and fix was not findable so rewritten
-    public CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
+    private CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
         try (
                 VenueDAO venueDAO = new VenueDAO();
                 VenueDeduplicator venueDeduplicator = new VenueDeduplicator(initialiseCanonicalVenues(venueDAO))
