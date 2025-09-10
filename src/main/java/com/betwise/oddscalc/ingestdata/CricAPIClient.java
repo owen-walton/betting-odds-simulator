@@ -281,8 +281,6 @@ public class CricAPIClient {
         // get result
         TeamKey tossWinningTeamKey = new TeamKey((String) matchInfoMap.get("tossWinner"));
         String toss = (String) matchInfoMap.get("tossChoice");
-        System.out.println(matchJson);
-        System.out.println("Raw tossChoice: " + toss);
         TossDecision tossDecision =
                 switch (toss == null ? "" : toss.toLowerCase()) {
                     case "bat" -> TossDecision.BAT;

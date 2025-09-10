@@ -6,12 +6,14 @@ import com.betwise.oddscalc.service.IngestionService;
 import java.io.IOException;
 
 public class Controller {
-    public void init() {
+    public void init() throws IOException {
         IngestionService ingestionService = new IngestionService();
         DatabaseInitialiser databaseInitialiser = new DatabaseInitialiser();
         databaseInitialiser.runDDL();
         ingestionService.ingestCricSheet();
         ingestionService.ingestCountriesFromCricAPI(); // ensure enough api hits available
+        ingestionService.updateLast7Days();
+        ingestionService.populateTeamHomeVenue();
     }
 
     public void maintain() throws IOException {

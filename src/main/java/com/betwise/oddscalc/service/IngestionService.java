@@ -13,7 +13,11 @@ import java.util.*;
 
 public class IngestionService {
     public void populateTeamHomeVenue() {
-
+        try (TeamHomeVenueDAO teamHomeVenueDAO = new TeamHomeVenueDAO()) {
+            teamHomeVenueDAO.populateTeamHomeVenue();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void ingestCountriesFromCricAPI() {
