@@ -116,6 +116,43 @@ public class CricketMatchDataSchema {
         }
     }
 
+    public void replaceTeamNameEverywhere(String newName, String oldName) {
+        if (newName == null || oldName == null || newName.isEmpty() || oldName.isEmpty()) {
+            return; // safety check
+        }
+
+        String oldNameNorm = oldName.trim().toLowerCase();
+        String newNameNorm = newName.trim();
+
+        // Update the Team object
+        for (Team team : getTeams()) {
+            if (team.getName().trim().toLowerCase().equals(oldNameNorm)) {
+                team.setName(newNameNorm);
+            }
+        }
+
+        // Update all MatchTeam references
+        for (MatchTeam matchTeam : getMatchTeams()) {
+            TeamKey tk = matchTeam.getTeamNaturalKey();
+            if (tk.name().trim().toLowerCase().equals(oldNameNorm)) {
+                // Replace with new TeamKey keeping the rest of the key intact
+                matchTeam.setTeamNaturalKey(new TeamKey(newNameNorm));
+            }
+        }
+
+        // Update all MatchResult references
+        for (MatchResult matchResult : getMatchResults()) {
+            if (matchResult.getWinningTeamNaturalKey() != null &&
+                    matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(oldNameNorm)) {
+                matchResult.setWinningTeamNaturalKey(new TeamKey(newNameNorm));
+            }
+            if (matchResult.getTossWinningTeamNaturalKey() != null &&
+                    matchResult.getTossWinningTeamNaturalKey().name().trim().toLowerCase().equals(oldNameNorm)) {
+                matchResult.setTossWinningTeamNaturalKey(new TeamKey(newNameNorm));
+            }
+        }
+    }
+
     public void updateVenueKey(Venue venue) {
         String ground = venue.getGroundName().trim().toLowerCase();
         String city = venue.getCity().trim().toLowerCase();

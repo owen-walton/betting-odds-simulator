@@ -1,3 +1,7 @@
+/**
+ * Class was bugged and the fix was un-findable so canonical venues map and main flow is unused
+ * only comparison methods e.g isSameVenue() are used
+ */
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.Venue;
@@ -65,36 +69,34 @@ public class VenueDeduplicator implements AutoCloseable {
         return matchState.getId();
     }
 
-    private boolean isSameVenue(String name, String city, String exName, String exCity) {
-        // Normalise in place
-        name = normaliseForComparison(stripGroundName(name));
-        city = normaliseForComparison(city);
-        exName = normaliseForComparison(stripGroundName(exName));
-        exCity = normaliseForComparison(exCity);
+    public boolean isSameVenue(String name, String city, String exName, String exCity) {
+        // Create VenueKey objects
+        VenueKey key1 = aliasCheck(new VenueKey(name, city));
+        VenueKey key2 = aliasCheck(new VenueKey(exName, exCity));
 
-        if (name.equals(exName)) {
+        // Normalise names and cities for comparison
+        String name1 = normaliseForComparison(stripGroundName(key1.groundName()));
+        String city1 = normaliseForComparison(key1.city());
+        String name2 = normaliseForComparison(stripGroundName(key2.groundName()));
+        String city2 = normaliseForComparison(key2.city());
+
+        if (name1.equals(name2)) {
             return true;
         }
 
-        String base = nameWithoutNumericSuffix(name);
-        String exBase = nameWithoutNumericSuffix(exName);
-        boolean hasSuf = hasNumericSuffix(name);
-        boolean exHasSuf = hasNumericSuffix(exName);
-        if (base.equals(exBase)) {
-            if (hasSuf || exHasSuf) {
-                // both have suffix, must match exactly
-                if (hasSuf && exHasSuf) {
-                    String suf = name.substring(base.length());
-                    String exSuf = exName.substring(exBase.length());
+        String base1 = nameWithoutNumericSuffix(name1);
+        String base2 = nameWithoutNumericSuffix(name2);
+        boolean hasSuf1 = hasNumericSuffix(name1);
+        boolean hasSuf2 = hasNumericSuffix(name2);
 
-                    if (suf.equals(exSuf)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+        if (base1.equals(base2)) {
+            if (hasSuf1 || hasSuf2) {
+                if (hasSuf1 && hasSuf2) {
+                    String suf1 = name1.substring(base1.length());
+                    String suf2 = name2.substring(base2.length());
+                    return suf1.equals(suf2);
                 } else {
-                    // one has a number, the other doesn’t → distinct
-                    return false;
+                    return false; // one has suffix, other doesn't
                 }
             }
         }
@@ -102,11 +104,17 @@ public class VenueDeduplicator implements AutoCloseable {
         return false;
     }
 
-    private boolean shouldReplace(VenueKey newKey, VenueKey oldKey) {
-        String newCity = newKey.city();
-        String oldCity = oldKey.city();
-        String newName = newKey.groundName();
-        String oldName = oldKey.groundName();
+    public boolean shouldReplace(VenueKey newKey, VenueKey oldKey) {
+        // Apply alias normalization
+        VenueKey normNew = aliasCheck(newKey);
+        if (!normNew.equals(newKey)) return true;
+        VenueKey normOld = aliasCheck(oldKey);
+        if (!normOld.equals(oldKey)) return false;
+
+        String newCity = normNew.city();
+        String oldCity = normOld.city();
+        String newName = normNew.groundName();
+        String oldName = normOld.groundName();
 
         // prefer non-empty city
         if (oldCity.isEmpty() && !newCity.isEmpty()) return true;
@@ -249,7 +257,7 @@ public class VenueDeduplicator implements AutoCloseable {
         addGroundAlias("Punjab Cricket Association Is Bindra Stadium", "Punjab Cricket Association Stadium ");
         addGroundAlias("Gahanga International Cricket Stadium Rwanda", "Gahanga International Cricket Stadium");
         addGroundAlias("Boland Park", "Boland Bank Park");
-        addGroundAlias("Dubai Sports City Cricket Stadium", "Dubai International Cricket Stadium");
+        addGroundAlias("Dubai International Cricket Stadium", "Dubai Sports City Cricket Stadium");
 
         addCityAlias("Gros Islet", "Gros Islet");
         addCityAlias("Chittagong", "Chattogram");

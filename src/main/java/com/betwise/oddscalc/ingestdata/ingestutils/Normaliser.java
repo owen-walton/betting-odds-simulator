@@ -16,6 +16,8 @@ public final class Normaliser {
         }
 
         String result = input.trim();
+        result = result.replaceAll("u0027", "'");
+        result = result.replaceAll("&rsquo;", "'");
         result = result.replaceAll("-", " ");
 
         // remove punctuation

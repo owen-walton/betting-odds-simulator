@@ -4,6 +4,7 @@ import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.HTTPClient;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
 import com.betwise.oddscalc.ingestdata.ingestutils.Normaliser;
+import com.betwise.oddscalc.ingestdata.ingestutils.TeamAliasMap;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +34,7 @@ public class CricAPIClient {
             }
 
             cricapiProps.load(input);
-            return cricapiProps.getProperty("apikey3");
+            return cricapiProps.getProperty("apikey");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -158,9 +159,6 @@ public class CricAPIClient {
         for (Map<String, Object> m : matches) {
             // eCricScore returns a text score only for completed games
             String matchStatus = Objects.toString(m.get("ms"));
-            if (m.get("id").equals("44f287d1-a088-4438-9cae-4b70850f4979")) {
-                System.out.println(m);
-            }
             if (!matchStatus.equalsIgnoreCase("result")) {
                 continue;  // upcoming fixture or live game
             }
@@ -264,11 +262,13 @@ public class CricAPIClient {
 
         // get teams
         List<Team> teams = new ArrayList<>();
-        String homeTeamName = Normaliser.normalise(((List<String>) matchInfoMap.get("teams")).get(0));
-        String awayTeamName = Normaliser.normalise(((List<String>) matchInfoMap.get("teams")).get(1));
+        String rawHomeTeamName = ((List<String>) matchInfoMap.get("teams")).get(0);
+        String rawAwayTeamName = ((List<String>) matchInfoMap.get("teams")).get(1);
+        String homeTeamName = Normaliser.normalise(rawHomeTeamName);
+        String awayTeamName = Normaliser.normalise(rawAwayTeamName);
         teams.add(new Team(0, homeTeamName));
         teams.add(new Team(0, awayTeamName));
-        if (homeTeamName.isEmpty() || awayTeamName.isEmpty()) {
+        if (rawHomeTeamName.isEmpty() || rawAwayTeamName.isEmpty()) {
             return new CricketMatchDataSchema();
         }
 
@@ -298,10 +298,10 @@ public class CricAPIClient {
         Integer marginSize = null;
         MarginType marginType = null;
         String winner = null;
-        if (statusNote.contains(homeTeamName)) {
+        if (statusNote.contains(rawHomeTeamName)) {
             winningTeamKey = new TeamKey(homeTeamName);
             result = Result.WIN;
-        } else if (statusNote.contains(awayTeamName)) {
+        } else if (statusNote.contains(rawAwayTeamName)) {
             winningTeamKey = new TeamKey(awayTeamName);
             result = Result.WIN;
         }
