@@ -5,10 +5,10 @@ import java.io.IOException;
 public class HTTPClient {
 
     public String get(String urlString) throws IOException {
-        System.out.println("Hit");
         java.net.URL url = new java.net.URL(urlString);
         java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
+        // identify as a standard web browser to avoid being blocked by some servers
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
         conn.setConnectTimeout(10000); // 10s timeout
         conn.setReadTimeout(10000);
