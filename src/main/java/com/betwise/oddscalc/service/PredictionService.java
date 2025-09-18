@@ -1,4 +1,7 @@
 package com.betwise.oddscalc.service;
 
 public class PredictionService {
+    public void findPrediction() {
+
+    }
 }
