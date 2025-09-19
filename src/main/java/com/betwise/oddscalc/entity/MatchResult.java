@@ -36,6 +36,10 @@ public class MatchResult {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
+    public MatchResult() {
+
+    }
+
     public String getMatchID() {
         return matchID;
     }

@@ -1,14 +1,15 @@
 package com.betwise.oddscalc.controller;
 
 import com.betwise.oddscalc.database.initialise.DatabaseInitialiser;
-import com.betwise.oddscalc.entity.CricketMatchDataSchema;
-import com.betwise.oddscalc.entity.FactorApplication;
+import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.service.IngestionService;
+import com.betwise.oddscalc.service.OddsService;
+import com.betwise.oddscalc.service.PredictionService;
 import com.betwise.oddscalc.service.TuningService;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 
 public class Controller {
     public void init() throws IOException {
@@ -23,8 +24,10 @@ public class Controller {
 
     public void maintainDatabase() throws IOException {
         IngestionService ingestionService = new IngestionService();
-        ingestionService.updateLast7Days();
+        PredictionService predictionService = new PredictionService();
+        Map<DataSource, String> idsAdded = ingestionService.updateLast7Days();
         ingestionService.populateTeamHomeVenue();
+        predictionService.updateELOsFor(idsAdded);
     }
 
     // updates model to match the latest version of cricket match data
@@ -43,7 +46,9 @@ public class Controller {
 
     }
 
-    public void findOdds(CricketMatchDataSchema match) {
-
+    private BettingOdds findOdds(CricketMatchDataSchema match, PredictionModel model) {
+        PredictionService predictionService = new PredictionService();
+        Map<Team, Double> result = predictionService.predict(match, model);
+        return new BettingOdds(result);
     }
 }

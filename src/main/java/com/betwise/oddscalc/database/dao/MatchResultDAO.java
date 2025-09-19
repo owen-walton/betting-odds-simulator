@@ -8,6 +8,7 @@ import com.betwise.oddscalc.entity.Result;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 
 public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
@@ -131,6 +132,39 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
             conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public double getDrawPercentage() {
+        String sqlTotal = "SELECT COUNT(*) AS total FROM MatchResult";
+        String sqlDraws = "SELECT COUNT(*) AS draws FROM MatchResult WHERE Result = ?";
+        Connection conn = null;
+
+        try {
+            conn = dbConnection.getConn();
+            long total = 0;
+            long draws = 0;
+
+            // get total matches
+            try (PreparedStatement psTotal = conn.prepareStatement(sqlTotal);
+                 ResultSet rsTotal = psTotal.executeQuery()) {
+                if (rsTotal.next()) {
+                    total = rsTotal.getLong("total");
+                }
+            }
+
+            // get draw matches
+            try (PreparedStatement psDraws = conn.prepareStatement(sqlDraws)) {
+                psDraws.setString(1, Result.DRAW.toString());
+                try (ResultSet rsDraws = psDraws.executeQuery()) {
+                    if (rsDraws.next()) {
+                        draws = rsDraws.getLong("draws");
+                    }
+                }
+            }
+            return (double) draws / total * 100.0;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to calculate draw percentage", e);
         }
     }
 

@@ -16,7 +16,8 @@ INSERT INTO Cricket.MatchFormat(FormatName, MatchLengthDays) VALUES
 CREATE TABLE Cricket.Team
 (
     TeamID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(120) NOT NULL UNIQUE
+    Name VARCHAR(120) NOT NULL UNIQUE,
+    ELO FLOAT
 );
 
 CREATE TABLE Cricket.Venue
@@ -78,21 +79,13 @@ CREATE TABLE Cricket.MatchTeam
 );
 
 -- contains the value of all factors that tune the elo model
-CREATE TABLE Cricket.Factors
+CREATE TABLE Cricket.PredictionModel
 (
-    FactorID INT AUTO_INCREMENT PRIMARY KEY,
-    FactorName VARCHAR(40) UNIQUE
-);
-
--- tells how each factor is applied to 'K' or 'E'
-CREATE TABLE Cricket.FactorApplication
-(
-    ApplyOrder INT NOT NULL,
-    AppliesTo ENUM('E', 'K') NOT NULL,
-    FactorID INT NOT NULL,
-    FactorValue FLOAT NOT NULL,
-    -- assuming X = FactorValue and Y = AppliesTo
-    Operation ENUM('+', '*', 'LogBaseX', 'LogBaseY', 'X^Y', 'Y^X') NOT NULL,
-    FOREIGN KEY (FactorID) REFERENCES Cricket.Factors(FactorID),
-    PRIMARY KEY(ApplyOrder, AppliesTo)
+    ModelID INT AUTO_INCREMENT PRIMARY KEY,
+    ModelDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    EValue FLOAT NOT NULL,
+    ELOGain FLOAT NOT NULL,
+    TossWinnerELOMultiplier FLOAT NOT NULL, -- expected between 0.0-1.0
+    WinMarginMultiplier FLOAT NOT NULL,
+    HomeAdvantageMultiplier FLOAT NOT NULL
 );
