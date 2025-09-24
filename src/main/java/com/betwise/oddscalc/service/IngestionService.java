@@ -34,7 +34,7 @@ public class IngestionService {
         }
     }
 
-    public Map<DataSource, String> updateLast7Days() throws IOException {
+    public void updateLast7Days() throws IOException {
         try (
                 TeamDAO teamDAO = new TeamDAO();
                 CricketMatchDAO cricketMatchDAO = new CricketMatchDAO()
@@ -43,14 +43,7 @@ public class IngestionService {
 
             CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1));
 
-            Map<DataSource, String> newIDs = new HashMap<>();
-            for (CricketMatch cm : schema.getCricketMatches()) {
-                newIDs.put(cm.getDataSource(), cm.getMatchID());
-            }
             uploadCricketMatchDataSchema(schema);
-
-            // returns ids added so that the elo gain/loss can be calculated
-            return newIDs;
         }
 
     }

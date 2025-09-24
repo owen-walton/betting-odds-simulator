@@ -13,7 +13,7 @@ public class DatabaseInitialiser {
 
     public void runDDL() {
         DBConnection dbConnection = new DBConnection();
-        String DDL_PATH_IN_RESOURCES = "/db/CricketDDL.sql";
+        String DDL_PATH_IN_RESOURCES = "/db/CricketMatchDataDDL.sql";
 
         try (Connection conn = dbConnection.getConn();
              Statement stmt = conn.createStatement()) {

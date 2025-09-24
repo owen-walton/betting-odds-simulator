@@ -1,26 +1,25 @@
-DROP DATABASE IF EXISTS Cricket;
-CREATE DATABASE Cricket;
-USE Cricket;
+DROP DATABASE IF EXISTS CricketMatchData;
+CREATE DATABASE CricketMatchData;
+USE CricketMatchData;
 
 -- lookup table for .CricketMatch, to allow number of days to tie to a format, populated with T20, ODI and Test
-CREATE TABLE Cricket.MatchFormat
+CREATE TABLE CricketMatchData.MatchFormat
 (
     FormatName VARCHAR(10) PRIMARY KEY,
     MatchLengthDays INT NOT NULL
 );
-INSERT INTO Cricket.MatchFormat(FormatName, MatchLengthDays) VALUES
+INSERT INTO CricketMatchData.MatchFormat(FormatName, MatchLengthDays) VALUES
 ("Test", 5),
 ("ODI", 1),
 ("T20", 1);
 
-CREATE TABLE Cricket.Team
+CREATE TABLE CricketMatchData.Team
 (
     TeamID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(120) NOT NULL UNIQUE,
-    ELO FLOAT
+    Name VARCHAR(120) NOT NULL UNIQUE
 );
 
-CREATE TABLE Cricket.Venue
+CREATE TABLE CricketMatchData.Venue
 (
     VenueID INT AUTO_INCREMENT PRIMARY KEY,
     GroundName VARCHAR(80) NOT NULL,
@@ -29,17 +28,17 @@ CREATE TABLE Cricket.Venue
 );
 
 -- assign table for all venues that are a home ground for each team
-CREATE TABLE Cricket.TeamHomeVenue
+CREATE TABLE CricketMatchData.TeamHomeVenue
 (
     TeamHomeVenueID INT AUTO_INCREMENT PRIMARY KEY,
     TeamID INT NOT NULL,
     VenueID INT NOT NULL,
-    FOREIGN KEY (TeamID) REFERENCES Cricket.Team(TeamID),
-    FOREIGN KEY (VenueID) REFERENCES Cricket.Venue(VenueID)
+    FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID),
+    FOREIGN KEY (VenueID) REFERENCES CricketMatchData.Venue(VenueID)
 );
 
 -- MATCH is a reserved sql keyword
-CREATE TABLE Cricket.CricketMatch
+CREATE TABLE CricketMatchData.CricketMatch
 (
     MatchID VARCHAR(40) NOT NULL,
     DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
@@ -47,11 +46,11 @@ CREATE TABLE Cricket.CricketMatch
     VenueID INT NOT NULL,
     StartDate DATE NOT NULL,
     PRIMARY KEY (MatchID, DataSource),
-    FOREIGN KEY (FormatName) REFERENCES Cricket.MatchFormat(FormatName),
-    FOREIGN KEY (VenueID) REFERENCES Cricket.Venue(VenueID)
+    FOREIGN KEY (FormatName) REFERENCES CricketMatchData.MatchFormat(FormatName),
+    FOREIGN KEY (VenueID) REFERENCES CricketMatchData.Venue(VenueID)
 );
 
-CREATE TABLE Cricket.MatchResult
+CREATE TABLE CricketMatchData.MatchResult
 (
     MatchID VARCHAR(40),
     DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
@@ -62,27 +61,18 @@ CREATE TABLE Cricket.MatchResult
     MarginSize INT, -- how many runs/wickets won by
     MarginType ENUM('Wickets', 'Runs', 'One Innings And Runs', 'Unknown'),
     PRIMARY KEY (MatchID, DataSource),
-    FOREIGN KEY (MatchID, DataSource) REFERENCES Cricket.CricketMatch(MatchID, DataSource),
-    FOREIGN KEY (WinningTeamID) REFERENCES Cricket.Team(TeamID)
+    FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
+    FOREIGN KEY (WinningTeamID) REFERENCES CricketMatchData.Team(TeamID)
 );
 
 -- assign table for match and team tables
-CREATE TABLE Cricket.MatchTeam
+CREATE TABLE CricketMatchData.MatchTeam
 (
     MatchTeamID INT AUTO_INCREMENT PRIMARY KEY,
     MatchID VARCHAR(40) NOT NULL,
     DataSource ENUM('CRICSHEET', 'CRICAPI') NOT NULL,
     TeamID INT NOT NULL,
-    FOREIGN KEY (MatchID, DataSource) REFERENCES Cricket.CricketMatch(MatchID, DataSource),
-    FOREIGN KEY (TeamID) REFERENCES Cricket.Team(TeamID),
+    FOREIGN KEY (MatchID, DataSource) REFERENCES CricketMatchData.CricketMatch(MatchID, DataSource),
+    FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID),
     UNIQUE (MatchID, DataSource, TeamID)
-);
-
--- contains the value of all factors that affect prediction
-CREATE TABLE Cricket.PredictionModel
-(
-    ModelID INT AUTO_INCREMENT PRIMARY KEY,
-    ModelDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    EValue FLOAT NOT NULL,
-    HomeAdvantageMultiplier FLOAT NOT NULL
 );

@@ -22,10 +22,6 @@ public class MatchTeam {
         this.teamNaturalKey = teamNaturalKey;
     }
 
-    public MatchTeam() {
-
-    }
-
     public int getMatchTeamID() {
         return matchTeamID;
     }

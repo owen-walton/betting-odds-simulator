@@ -11,7 +11,7 @@ import java.util.*;
 
 public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
-    private final DBConnection dbConnection;
+    private DBConnection dbConnection;
 
     // initialise connection
     public TeamDAO() {
@@ -36,15 +36,17 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
                 placeholdersBuilder.append(", ");
             }
         }
-        String sql = "SELECT TeamID, Name FROM Team WHERE Name IN (" + placeholdersBuilder + ")";
+        String sql = "SELECT TeamID, Name FROM Team WHERE Name IN (" + placeholdersBuilder.toString() + ")";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement statement = conn.prepareStatement(sql)) {
 
             int index = 1;
             for (Team team : teams) {
-                statement.setString(index++, team.getName());
+                statement.setString(index, team.getName());
+                index++;
             }
+
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
@@ -82,23 +84,18 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
     @Override
     public boolean insert(Team team) {
-        String sql = "INSERT INTO Team (Name, ELO) VALUES (?, ?)";
+        String sql = "INSERT INTO Team (Name) VALUES (?)";
 
         try (PreparedStatement statement = dbConnection.getConn().prepareStatement(sql)) {
             statement.setString(1, team.getName());
-            Float elo = team.getElo();
-            if (elo != null) {
-                statement.setFloat(2, elo);
-            } else {
-                statement.setNull(2, java.sql.Types.FLOAT);
-            }
 
             statement.executeUpdate();
             dbConnection.getConn().commit();
             return true;
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to insert team", e);
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -112,7 +109,8 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         List<Team> uniqueTeams = new ArrayList<>();
         for (Team team : teams) {
             TeamKey key = new TeamKey(team.getName());
-            if (uniqueKeys.add(key)) {
+            if (!uniqueKeys.contains(key)) {
+                uniqueKeys.add(key);
                 uniqueTeams.add(team);
             }
         }
@@ -136,7 +134,8 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
             int i = 1;
             for (Team team : teams) {
-                ps.setString(i++, team.getName());
+                ps.setString(i, team.getName());
+                i++;
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -156,6 +155,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
     }
 
     public void bulkInsertIfNotExists(List<Team> teams) {
@@ -165,43 +165,22 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
             return;
         }
 
-        String sql = "INSERT INTO Team (Name, ELO) VALUES (?, ?)";
+        String sql = "INSERT INTO Team (Name) VALUES (?)";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
+            // build bulk insert
             for (Team team : teams) {
                 preparedStatement.setString(1, team.getName());
-                Float elo = team.getElo();
-                if (elo != null) {
-                    preparedStatement.setFloat(2, elo);
-                } else {
-                    preparedStatement.setNull(2, java.sql.Types.FLOAT);
-                }
                 preparedStatement.addBatch();
             }
 
+            // executed bulk insert
             preparedStatement.executeBatch();
             conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public void updateElo(TeamKey key, Float elo) {
-        String sql = "UPDATE Team SET ELO = ? WHERE LOWER(TRIM(Name)) = LOWER(TRIM(?))";
-
-        try (PreparedStatement ps = dbConnection.getConn().prepareStatement(sql)) {
-            if (elo != null) {
-                ps.setFloat(1, elo);
-            } else {
-                ps.setNull(1, java.sql.Types.FLOAT);
-            }
-            ps.setString(2, key.name());
-            ps.executeUpdate();
-            dbConnection.getConn().commit();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to update ELO for team " + key.name(), e);
         }
     }
 

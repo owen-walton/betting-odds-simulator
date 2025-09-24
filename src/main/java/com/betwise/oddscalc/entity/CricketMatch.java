@@ -10,9 +10,6 @@ public class CricketMatch {
     private int venueID;
     private VenueKey venueNaturalKey;
 
-    public CricketMatch() {
-    }
-
     public CricketMatch(String matchID, DataSource dataSource, LocalDate startDate, int venueID, String formatName, VenueKey venueNaturalKey) {
         this.matchID = matchID;
         this.dataSource = dataSource;
