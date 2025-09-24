@@ -1,3 +1,8 @@
+/**
+ * Acts as a link between all service classes so logic can run together whilst maintaining separated
+ * Each public function in controller is a different run case
+ */
+
 package com.betwise.oddscalc.controller;
 
 import com.betwise.oddscalc.database.initialise.DatabaseInitialiser;
@@ -17,17 +22,15 @@ public class Controller {
         DatabaseInitialiser databaseInitialiser = new DatabaseInitialiser();
         databaseInitialiser.runDDL();
         ingestionService.ingestCricSheet();
-        ingestionService.ingestCountriesFromCricAPI(); // ensure enough api hits available
+        ingestionService.ingestCountriesFromCricAPI(); // must ensure enough api hits available before this runs
         ingestionService.updateLast7Days();
         ingestionService.populateTeamHomeVenue();
     }
 
     public void maintainDatabase() throws IOException {
         IngestionService ingestionService = new IngestionService();
-        PredictionService predictionService = new PredictionService();
-        Map<DataSource, String> idsAdded = ingestionService.updateLast7Days();
+        ingestionService.updateLast7Days();
         ingestionService.populateTeamHomeVenue();
-        predictionService.updateELOsFor(idsAdded);
     }
 
     // updates model to match the latest version of cricket match data
@@ -36,19 +39,20 @@ public class Controller {
         tuningService.updatePredictionModel();
     }
 
-    //------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------
-
+    // TODO: create a use case that will test the accuracy of tuneModel()
     public void testModel(LocalDate trainingDataEndDateIncl) {
-        TuningService tuningService = new TuningService();
+        // TuningService tuningService = new TuningService();
         // List<FactorApplication> factorApplications = tuningService.tuneModel(LocalDate.MIN, trainingDataEndDateIncl);
 
     }
 
-    private BettingOdds findOdds(CricketMatchDataSchema match, PredictionModel model) {
+    public BettingOdds findOdds(CricketMatchDataSchema match, PredictionModel model) {
         PredictionService predictionService = new PredictionService();
         Map<Team, Double> result = predictionService.predict(match, model);
+        if (result == null) {
+            System.out.println(match.getTeams().get(0) + " or " + match.getTeams().get(1) + " have not played enough matches to predict the result.");
+            return null;
+        }
         return new BettingOdds(result);
     }
 }

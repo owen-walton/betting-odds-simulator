@@ -19,43 +19,34 @@ public class PredictionModelDAO implements AutoCloseable {
         }
     }
 
-    // insert a new PredictionModel row (ModelDate can be left null to use default CURRENT_TIMESTAMP)
+    // insert a new row (ModelDate can be null to use CURRENT_TIMESTAMP)
     public void insert(PredictionModel model) {
         String sql = """
             INSERT INTO Cricket.PredictionModel
-              (ModelDate, EValue, ELOGain,
-               TossWinnerELOGainMultiplier, TossWinnerMultiplier,
-               WinMarginMultiplier, HomeAdvantageMultiplier)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+              (ModelDate, EValue, HomeAdvantageMultiplier)
+            VALUES (?, ?, ?)
             """;
 
         try (PreparedStatement ps = dbConnection.getConn().prepareStatement(sql)) {
-            // If modelDate is null, let DB default to CURRENT_TIMESTAMP
             if (model.getModelDate() != null) {
                 ps.setTimestamp(1, Timestamp.valueOf(model.getModelDate()));
             } else {
                 ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             }
-            ps.setDouble(2, model.geteValue());
-            ps.setDouble(3, model.getEloGain());
-            ps.setDouble(4, model.getTossWinnerEloGainMultiplier());
-            ps.setDouble(5, model.getTossWinnerMultiplier());
-            ps.setDouble(6, model.getWinMarginMultiplier());
-            ps.setDouble(7, model.getHomeAdvantageMultiplier());
+            ps.setDouble(2, model.getEValue());
+            ps.setDouble(3, model.getHomeAdvantageMultiplier());
             ps.executeUpdate();
             dbConnection.getConn().commit();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new RuntimeException("Failed to insert PredictionModel", e);
         }
     }
 
-    // ordered by ModelDate descending
+    // get all rows ordered by ModelDate
     public List<PredictionModel> getAll() {
         List<PredictionModel> results = new ArrayList<>();
         String sql = """
-            SELECT ModelID, ModelDate, EValue, ELOGain,
-                   TossWinnerELOGainMultiplier, TossWinnerMultiplier,
-                   WinMarginMultiplier, HomeAdvantageMultiplier
+            SELECT ModelID, ModelDate, EValue, HomeAdvantageMultiplier
             FROM Cricket.PredictionModel
             ORDER BY ModelDate DESC
             """;
@@ -68,26 +59,20 @@ public class PredictionModelDAO implements AutoCloseable {
                 model.setModelId(rs.getInt("ModelID"));
                 Timestamp ts = rs.getTimestamp("ModelDate");
                 model.setModelDate(ts != null ? ts.toLocalDateTime() : null);
-                model.seteValue((float) rs.getDouble("EValue"));
-                model.setEloGain((float) rs.getDouble("ELOGain"));
-                model.setTossWinnerEloGainMultiplier((float) rs.getDouble("TossWinnerELOGainMultiplier"));
-                model.setTossWinnerMultiplier((float) rs.getDouble("TossWinnerMultiplier"));
-                model.setWinMarginMultiplier((float) rs.getDouble("WinMarginMultiplier"));
+                model.setEValue((float) rs.getDouble("EValue"));
                 model.setHomeAdvantageMultiplier((float) rs.getDouble("HomeAdvantageMultiplier"));
                 results.add(model);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new RuntimeException("Failed to retrieve PredictionModel rows", e);
         }
         return results;
     }
 
-    // Retrieve the most recent PredictionModel (latest ModelDate)
+    // get the most recent row
     public PredictionModel getLatestModel() {
         String sql = """
-            SELECT ModelID, ModelDate, EValue, ELOGain,
-                   TossWinnerELOGainMultiplier, TossWinnerMultiplier,
-                   WinMarginMultiplier, HomeAdvantageMultiplier
+            SELECT ModelID, ModelDate, EValue, HomeAdvantageMultiplier
             FROM Cricket.PredictionModel
             ORDER BY ModelDate DESC
             LIMIT 1
@@ -101,16 +86,12 @@ public class PredictionModelDAO implements AutoCloseable {
                 model.setModelId(rs.getInt("ModelID"));
                 Timestamp ts = rs.getTimestamp("ModelDate");
                 model.setModelDate(ts != null ? ts.toLocalDateTime() : null);
-                model.seteValue((float) rs.getDouble("EValue"));
-                model.setEloGain((float) rs.getDouble("ELOGain"));
-                model.setTossWinnerEloGainMultiplier((float) rs.getDouble("TossWinnerELOGainMultiplier"));
-                model.setTossWinnerMultiplier((float) rs.getDouble("TossWinnerMultiplier"));
-                model.setWinMarginMultiplier((float) rs.getDouble("WinMarginMultiplier"));
+                model.setEValue((float) rs.getDouble("EValue"));
                 model.setHomeAdvantageMultiplier((float) rs.getDouble("HomeAdvantageMultiplier"));
                 return model;
             }
-            return null; // no rows found
-        } catch (Exception e) {
+            return null;
+        } catch (SQLException e) {
             throw new RuntimeException("Failed to retrieve latest PredictionModel", e);
         }
     }

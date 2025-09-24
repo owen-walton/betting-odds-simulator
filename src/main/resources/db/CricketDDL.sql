@@ -78,14 +78,11 @@ CREATE TABLE Cricket.MatchTeam
     UNIQUE (MatchID, DataSource, TeamID)
 );
 
--- contains the value of all factors that tune the elo model
+-- contains the value of all factors that affect prediction
 CREATE TABLE Cricket.PredictionModel
 (
     ModelID INT AUTO_INCREMENT PRIMARY KEY,
     ModelDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     EValue FLOAT NOT NULL,
-    ELOGain FLOAT NOT NULL,
-    TossWinnerELOMultiplier FLOAT NOT NULL, -- expected between 0.0-1.0
-    WinMarginMultiplier FLOAT NOT NULL,
     HomeAdvantageMultiplier FLOAT NOT NULL
 );

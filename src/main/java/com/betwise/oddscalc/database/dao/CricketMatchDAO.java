@@ -5,9 +5,8 @@ import com.betwise.oddscalc.entity.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 
 public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
 
@@ -250,8 +249,118 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
         }
     }
 
+    public List<MatchDetails> getMatchDetails(String latestMatchID,
+                                              DataSource latestDataSource,
+                                              int batchSize) {
+        List<MatchDetails> matchDetailsList = new ArrayList<>();
+
+        String sql = """
+        SELECT
+            m.MatchID,
+            m.DataSource,
+            m.StartDate,
+            r.WinningTeamID,
+            r.TossWinningTeamID,
+            r.TossDecision,
+            r.Result,
+            r.MarginSize,
+            r.MarginType,
+            mt.TeamID,
+            t.ELO AS TeamElo,
+            CASE WHEN thv.TeamID IS NOT NULL THEN TRUE ELSE FALSE END AS IsHome
+        FROM Cricket.CricketMatch m
+        JOIN Cricket.MatchTeam mt 
+            ON m.MatchID = mt.MatchID AND m.DataSource = mt.DataSource
+        JOIN Cricket.Team t
+            ON mt.TeamID = t.TeamID
+        LEFT JOIN Cricket.MatchResult r 
+            ON m.MatchID = r.MatchID AND m.DataSource = r.DataSource
+        LEFT JOIN Cricket.TeamHomeVenue thv 
+            ON mt.TeamID = thv.TeamID 
+            AND thv.VenueID = m.VenueID
+        WHERE 
+            (? IS NULL OR ? IS NULL
+             OR (m.StartDate > (SELECT StartDate FROM Cricket.CricketMatch 
+                                 WHERE MatchID = ? AND DataSource = ?)) 
+             OR (m.StartDate = (SELECT StartDate FROM Cricket.CricketMatch 
+                                 WHERE MatchID = ? AND DataSource = ?) 
+                 AND m.MatchID > ?))
+        ORDER BY m.StartDate ASC, m.MatchID ASC
+        LIMIT ?
+    """;
+
+        try (Connection conn = dbConnection.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Parameters for default start (if latestMatchID or latestDataSource is null)
+            ps.setString(1, latestMatchID);
+            ps.setString(2, latestDataSource == null ? null : latestDataSource.name());
+            ps.setString(3, latestMatchID);
+            ps.setString(4, latestDataSource == null ? null : latestDataSource.name());
+            ps.setString(5, latestMatchID);
+            ps.setString(6, latestDataSource == null ? null : latestDataSource.name());
+            ps.setString(7, latestMatchID);
+            ps.setInt(8, batchSize);
+
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                Map<String, MatchDetails> matchMap = new LinkedHashMap<>();
+
+                while (rs.next()) {
+                    String matchID = rs.getString("MatchID");
+                    DataSource ds = DataSource.valueOf(rs.getString("DataSource"));
+
+                    MatchDetails md = matchMap.get(matchID);
+                    if (md == null) {
+                        md = new MatchDetails();
+                        md.setMatchID(matchID);
+                        md.setDataSource(ds.name());
+                        md.setStartDate(rs.getDate("StartDate").toLocalDate());
+                        md.setWinningTeamID(rs.getObject("WinningTeamID") == null ? null : rs.getInt("WinningTeamID"));
+                        md.setTossWinningTeamID(rs.getInt("TossWinningTeamID"));
+                        md.setTossDecision(rs.getString("TossDecision"));
+                        String result = rs.getString("Result");
+                        md.setResult(result == null ? null : result.replace(' ', '_').replace('-', '_'));
+                        md.setMarginSize(rs.getObject("MarginSize") == null ? 0 : rs.getInt("MarginSize"));
+                        md.setMarginType(rs.getString("MarginType"));
+                        md.setTeamHomeMap(new HashMap<>());
+                        md.setTeamEloMap(new HashMap<>());
+                        matchMap.put(matchID, md);
+                    }
+
+                    int teamID = rs.getInt("TeamID");
+                    boolean isHome = rs.getBoolean("IsHome");
+                    double elo = rs.getObject("TeamElo") == null ? 1500.0 : rs.getDouble("TeamElo");
+
+                    md.getTeamHomeMap().put(teamID, isHome);
+                    md.getTeamEloMap().put(teamID, elo);
+                }
+
+                matchDetailsList.addAll(matchMap.values());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch match details", e);
+        }
+
+        return matchDetailsList;
+    }
+
     @Override
     public void close() {
         dbConnection.disconnect();
     }
+
+    public static void main(String[] args) {
+        try (CricketMatchDAO dao = new CricketMatchDAO()) {
+            List<MatchDetails> matches = dao.getMatchDetails(null, null, 10);
+            System.out.println("Fetched " + matches.size() + " matches");
+            for (MatchDetails md : matches) {
+                System.out.println("MatchID: " + md.getMatchID());
+                System.out.println("StartDate: " + md.getStartDate());
+                System.out.println("WinningTeamID: " + md.getWinningTeamID());
+                System.out.println("TeamHomeMap: " + md.getTeamHomeMap());
+                System.out.println("-------------------------");
+            }
+        }
+    }
+
 }

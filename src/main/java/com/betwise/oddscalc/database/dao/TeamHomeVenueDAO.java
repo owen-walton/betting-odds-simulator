@@ -22,33 +22,33 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
         }
     }
 
-    public void populateTeamHomeVenue() {
+    public void populateTeamHomeVenue() throws SQLException {
         // reset table
-        String sql1 = "TRUNCATE TABLE CricketMatchData.TeamHomeVenue";
+        String sql1 = "TRUNCATE TABLE Cricket.TeamHomeVenue";
         // When 50% or more of a venues games have involved a team and there are 6 games (tests count for 2) or more,
         // the singular team with the most games there is assigned as the home team
         String sql2 = """
-                 INSERT INTO CricketMatchData.TeamHomeVenue (TeamID, VenueID)
+                 INSERT INTO Cricket.TeamHomeVenue (TeamID, VenueID)
                  SELECT TeamID, VenueID FROM (
                     SELECT t.TeamID, v.VenueID, SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) AS weighted_games,
                     ROW_NUMBER() OVER (
                         PARTITION BY v.VenueID
                         ORDER BY SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) DESC
                     ) AS rn
-                    FROM CricketMatchData.Venue v
-                    JOIN CricketMatchData.CricketMatch cm
+                    FROM Cricket.Venue v
+                    JOIN Cricket.CricketMatch cm
                         ON cm.VenueID = v.VenueID
-                    JOIN CricketMatchData.MatchTeam mt
+                    JOIN Cricket.MatchTeam mt
                         ON mt.MatchID = cm.MatchID
                         AND mt.DataSource = cm.DataSource
-                    JOIN CricketMatchData.Team t
+                    JOIN Cricket.Team t
                         ON t.TeamID = mt.TeamID
                     GROUP BY v.VenueID, t.TeamID
                     HAVING SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) >= 5
                         AND SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) >=
                         0.5 * (
                                 SELECT SUM(CASE WHEN cm2.FormatName = 'Test' THEN 2 ELSE 1 END)
-                                FROM CricketMatchData.CricketMatch cm2
+                                FROM Cricket.CricketMatch cm2
                                 WHERE cm2.VenueID = v.VenueID
                             )
                  ) EachVenueRanked
@@ -56,7 +56,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
                 """;
         // relax the % of games for venues that still don't have a home team
         String sql3 = """
-                 INSERT INTO CricketMatchData.TeamHomeVenue (TeamID, VenueID)
+                 INSERT INTO Cricket.TeamHomeVenue (TeamID, VenueID)
                  SELECT TeamID, VenueID
                  FROM (
                     SELECT t.TeamID, v.VenueID,
@@ -65,22 +65,22 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
                             PARTITION BY v.VenueID
                             ORDER BY SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) DESC
                         ) AS rn
-                    FROM CricketMatchData.Venue v
-                    JOIN CricketMatchData.CricketMatch cm
+                    FROM Cricket.Venue v
+                    JOIN Cricket.CricketMatch cm
                         ON cm.VenueID = v.VenueID
-                    JOIN CricketMatchData.MatchTeam mt
+                    JOIN Cricket.MatchTeam mt
                         ON mt.MatchID = cm.MatchID AND mt.DataSource = cm.DataSource
-                    JOIN CricketMatchData.Team t
+                    JOIN Cricket.Team t
                         ON t.TeamID = mt.TeamID
                     WHERE v.VenueID NOT IN (
-                        SELECT VenueID FROM CricketMatchData.TeamHomeVenue
+                        SELECT VenueID FROM Cricket.TeamHomeVenue
                     )
                     GROUP BY v.VenueID, t.TeamID
                     HAVING SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) >= 7
                         AND SUM(CASE WHEN cm.FormatName = 'Test' THEN 2 ELSE 1 END) >=
                             0.4 * (
                                 SELECT SUM(CASE WHEN cm2.FormatName = 'Test' THEN 2 ELSE 1 END)
-                                FROM CricketMatchData.CricketMatch cm2
+                                FROM Cricket.CricketMatch cm2
                                 WHERE cm2.VenueID = v.VenueID
                             )
                  ) EachVenueRanked
@@ -88,6 +88,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
                 """;
 
         Connection conn = dbConnection.getConn();
+        boolean originalState = conn.getAutoCommit();
         try (Statement stmt = conn.createStatement()) {
             conn.setAutoCommit(false);
 
@@ -105,7 +106,7 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
             throw new RuntimeException("Failed to populate TeamHomeVenue", e);
         } finally {
             try {
-                conn.setAutoCommit(true);
+                conn.setAutoCommit(originalState);
             } catch (SQLException ignore) {
             }
         }

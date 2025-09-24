@@ -1,20 +1,15 @@
 package com.betwise.oddscalc.service;
 
-import com.betwise.oddscalc.database.dao.CricketMatchDAO;
 import com.betwise.oddscalc.database.dao.MatchResultDAO;
-import com.betwise.oddscalc.database.dao.PredictionModelDAO;
-import com.betwise.oddscalc.database.dao.TeamDAO;
 import com.betwise.oddscalc.entity.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PredictionService {
 
-    /**
-     * Predicts the chance of each team winning plus draw chance.
-     */
+    // predicts the chance of each team winning and draw chance
+    // match schema passed in must contain 2 teams,
     public Map<Team, Double> predict(CricketMatchDataSchema match, PredictionModel model) {
         try (MatchResultDAO matchResultDAO = new MatchResultDAO()) {
 
@@ -24,11 +19,15 @@ public class PredictionService {
             // Adjust ELO ratings for home-field advantage
             double adjEloA = adjustELO(teamA, match, model);
             double adjEloB = adjustELO(teamB, match, model);
+            if (adjEloA == -1 || adjEloB == -1) {
+                // if a team has no ELO, don't allow odds on the game
+                return null;
+            }
             teamA.setElo((float) adjEloA);
             teamB.setElo((float) adjEloB);
 
             // Core ELO win probability
-            double teamAWinChance = calculateWinChance(adjEloA, adjEloB, model.geteValue());
+            double teamAWinChance = ELOformula(adjEloA, adjEloB, model.getEValue());
 
             // Historical draw frequency
             double drawChance = matchResultDAO.getDrawPercentage();
@@ -42,13 +41,20 @@ public class PredictionService {
         }
     }
 
+    private double ELOformula(double teamELO, double opponentELO, double eValue) {
+        return 1.0 / (1.0 + Math.pow(10.0, (opponentELO - teamELO) / eValue));
+    }
+
     /**
      * Adjusts a single team’s ELO for prediction using known pre-match factors.
-     * Only home-field advantage is applied because toss and margin are not
-     * known before the match and do not change the base probability.
+     * Only home-field advantage is currently applied because toss and margin, etc. are not
+     * known before the match the so cannot affect the probability
      */
     public double adjustELO(Team team, CricketMatchDataSchema match, PredictionModel model) {
-        double adjusted = team.getElo() == null ? 1500.0 : team.getElo();
+        double adjusted = team.getElo();
+        if (team.getElo() == null) {
+            return -1;
+        }
         for (TeamHomeVenue hv : match.getTeamHomeVenues()) {
             if (team.getTeamID() == hv.teamID()) {
                 adjusted *= model.getHomeAdvantageMultiplier();
@@ -58,18 +64,11 @@ public class PredictionService {
     }
 
     /**
-     * Standard ELO probability formula.
-     */
-    public double calculateWinChance(double teamELO, double opponentELO, double eValue) {
-        return 1.0 / (1.0 + Math.pow(10.0, (opponentELO - teamELO) / eValue));
-    }
-
-    /**
      * After matches finish, update team ELOs using the result and the
      * latest prediction model.  Uses TossWinnerEloGainMultiplier and
      * WinMarginMultiplier when applicable.
      */
-    public void updateELOsFor(Map<DataSource, String> matchIDs) {
+    /* public void updateELOsFor(Map<DataSource, String> matchIDs) {
         try (CricketMatchDAO matchDAO = new CricketMatchDAO();
              TeamDAO teamDAO = new TeamDAO();
              MatchResultDAO resultDAO = new MatchResultDAO();
@@ -91,7 +90,7 @@ public class PredictionService {
                 double eloA = tA.getElo() == null ? 1500.0 : tA.getElo();
                 double eloB = tB.getElo() == null ? 1500.0 : tB.getElo();
 
-                double expA = calculateWinChance(eloA, eloB, model.geteValue());
+                double expA = ELOformula(eloA, eloB, model.geteValue());
                 double expB = 1.0 - expA;
 
                 // Actual scores: 1 win, 0 loss, 0.5 draw
@@ -132,5 +131,5 @@ public class PredictionService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to update ELOs", e);
         }
-    }
+    }*/
 }
