@@ -13,14 +13,18 @@ import java.util.*;
 
 public class IngestionService {
     public void populateTeamHomeVenue() {
+        System.out.println("Populating Team Home Venue");
         try (TeamHomeVenueDAO teamHomeVenueDAO = new TeamHomeVenueDAO()) {
             teamHomeVenueDAO.populateTeamHomeVenue();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            System.out.println("Team Home Venue populated");
         }
     }
 
     public void ingestCountriesFromCricAPI() {
+        System.out.println("Ingesting countries from cricAPI");
         TeamAliasMap teamAliasMap = new TeamAliasMap();
         CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), null);
         try (TeamDAO teamDAO = new TeamDAO()) {
@@ -31,19 +35,26 @@ public class IngestionService {
             teamDAO.bulkInsertIfNotExists(teams);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            System.out.println("Countries ingested");
         }
     }
 
     public void updateLast7Days() throws IOException {
+        System.out.println("Updating last 7 days");
         try (
                 TeamDAO teamDAO = new TeamDAO();
                 CricketMatchDAO cricketMatchDAO = new CricketMatchDAO()
         ){
+            System.out.println("Initialising client");
             CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), teamDAO.getAllTeamNames());
 
+            System.out.println("Beginning parse");
             CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1));
 
             uploadCricketMatchDataSchema(schema);
+        } finally {
+            System.out.println("Last 7 days updated");
         }
 
     }
@@ -52,8 +63,9 @@ public class IngestionService {
         CricSheetParser cricSheetParser = new CricSheetParser();
         List<String> allMatchIDs = cricSheetParser.getInternationalMatchIDs();
         final int BATCH_SIZE = 500;
+        int numMatches = allMatchIDs.size();
 
-        for (int i = 0; i < allMatchIDs.size(); i += BATCH_SIZE) {
+        for (int i = 0; i < numMatches; i += BATCH_SIZE) {
             int endIndex;
             if (BATCH_SIZE + i < allMatchIDs.size()) {
                 endIndex = BATCH_SIZE + i;
@@ -64,6 +76,8 @@ public class IngestionService {
 
             CricketMatchDataSchema schema = cricSheetParser.parseMatchesBatch(batchIDs);
             uploadCricketMatchDataSchema(schema);
+
+            System.out.println((i+batchIDs.size()) + " out of " + numMatches + " parsed");
         }
     }
 

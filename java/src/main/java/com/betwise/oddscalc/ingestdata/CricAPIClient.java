@@ -204,11 +204,13 @@ public class CricAPIClient {
 
     public CricketMatchDataSchema parseAllMatchesWithin7DaysSince(LocalDate fromDate) throws IOException {
         // add all matchIDs of finished matches after fromDate
+        System.out.println("Getting match ids");
         Set<String> idSet = getMatchIDsWithinLast7DaysFrom(fromDate);
 
         // use matchID set to parse all matches
         CricketMatchDataSchema schema = new CricketMatchDataSchema();
         for (String matchID : idSet) {
+            System.out.println("Parsing match: " + matchID);
             schema.appendSchema(parseSingleMatch(matchID, fromDate));
         }
         return schema;
