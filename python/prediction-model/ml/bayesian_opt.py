@@ -14,6 +14,7 @@ def optimiseParams(
     random_state: Optional[int] = None
 ) -> TuningParams:
     """
+    TODO May need batching in future
     searchBounds: (minParams, maxParams)
     matches: matches data
     init_points: number of random explorations before bayesia opt begins
@@ -28,20 +29,18 @@ def optimiseParams(
     pbounds = {
         "e_value":         (min_params.e_value,        max_params.e_value),
         "k_factor":        (min_params.k_factor,       max_params.k_factor),
-        "decay":           (min_params.decay,          max_params.decay),
         "starting_elo":    (min_params.starting_elo,   max_params.starting_elo),
         "home_adv":        (min_params.home_adv,       max_params.home_adv),
         "toss_adv":        (min_params.toss_adv,       max_params.toss_adv),
-        "win_margin":      (min_params.win_margin,     max_params.win_margin),
         "max_draw_chance": (min_params.max_draw_chance,max_params.max_draw_chance),
     }
 
-    # 2) wrap your evaluate() so that BO maximizes –score (i.e. minimizes score)
+    # wrap evaluate() so that a higher score is better (as required by bayes opt library)
     def bayes_evaluate(**kwargs) -> float:
         tp = TuningParams(**kwargs)
         return -evaluate(tp, matches)
 
-    # 3) create and run the optimiser
+    # create the optimiser
     optimizer = BayesianOptimization(
         f=bayes_evaluate,
         pbounds=pbounds,
@@ -49,8 +48,9 @@ def optimiseParams(
         random_state=random_state
     )
 
+    # run optimisation
     optimizer.maximize(init_points=init_points, n_iter=n_iter)
 
-    # 4) unpack the best params into your TuningParams class
+    # return best parameters
     best_params_dict = optimizer.max["params"]
     return TuningParams(**best_params_dict)

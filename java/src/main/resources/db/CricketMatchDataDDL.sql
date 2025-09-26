@@ -76,3 +76,16 @@ CREATE TABLE CricketMatchData.MatchTeam
     FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID),
     UNIQUE (MatchID, DataSource, TeamID)
 );
+
+CREATE TABLE CricketMatchData.TunedParameters
+(
+    TuningID INT AUTO_INCREMENT PRIMARY KEY,
+    e_value DOUBLE NOT NULL,
+    k_factor DOUBLE NOT NULL,
+    starting_elo DOUBLE NOT NULL,
+    home_adv DOUBLE NOT NULL,
+    toss_adv DOUBLE NOT NULL,
+    win_margin DOUBLE, -- nullable if not implemented yet
+    max_draw_chance DOUBLE NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
