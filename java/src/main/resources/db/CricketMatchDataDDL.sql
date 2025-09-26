@@ -79,7 +79,8 @@ CREATE TABLE CricketMatchData.MatchTeam
 
 CREATE TABLE CricketMatchData.TunedParameters
 (
-    TuningID INT AUTO_INCREMENT PRIMARY KEY,
+    TuningID INT NOT NULL,
+    FormatName VARCHAR(10) NOT NULL,
     e_value DOUBLE NOT NULL,
     k_factor DOUBLE NOT NULL,
     starting_elo DOUBLE NOT NULL,
@@ -87,5 +88,6 @@ CREATE TABLE CricketMatchData.TunedParameters
     toss_adv DOUBLE NOT NULL,
     win_margin DOUBLE, -- nullable if not implemented yet
     max_draw_chance DOUBLE NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CreatedAt TIMESTAMP,
+    PRIMARY KEY(TuningID, FormatName)
 );

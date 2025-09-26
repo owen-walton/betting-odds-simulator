@@ -4,7 +4,7 @@ import mysql.connector
 from db.connection import get_conn
 from model.match import Match, DataSource, MarginType
 
-def get_matches(min_date: date, max_date: date) -> List[Match]:
+def get_matches(min_date: date, max_date: date, match_format: str) -> List[Match]:
     conn = get_conn()
     cursor = conn.cursor(dictionary=True)
 
@@ -25,11 +25,11 @@ def get_matches(min_date: date, max_date: date) -> List[Match]:
             ON cm.MatchID = mt.MatchID AND cm.DataSource = mt.DataSource
         LEFT JOIN CricketMatchData.TeamHomeVenue thv
             ON thv.TeamID = mt.TeamID AND thv.VenueID = cm.VenueID
-        WHERE cm.StartDate BETWEEN %s AND %s
+        WHERE cm.FormatName = %s AND cm.StartDate BETWEEN %s AND %s
         ORDER BY cm.MatchID, cm.DataSource;
     """
 
-    cursor.execute(sql, (min_date, max_date))
+    cursor.execute(sql, (match_format, min_date, max_date))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()

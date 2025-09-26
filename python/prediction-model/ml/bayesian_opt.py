@@ -52,5 +52,6 @@ def optimiseParams(
     optimizer.maximize(init_points=init_points, n_iter=n_iter)
 
     # return best parameters
+    print(optimizer.max["target"])
     best_params_dict = optimizer.max["params"]
     return TuningParams(**best_params_dict)
