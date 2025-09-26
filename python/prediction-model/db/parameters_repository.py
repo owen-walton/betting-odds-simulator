@@ -1,4 +1,3 @@
-import mysql.connector
 from datetime import datetime, timezone
 from typing import Dict
 from model.params import TuningParams
@@ -22,10 +21,13 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
     # current timestamp is same for all formats being uploaded
     created_at = datetime.now(timezone.utc)
 
+    # set all old models to inactive
+    cursor.execute("UPDATE CricketMatchData.TunedParameters SET IsAdded = FALSE;")
+
     sql = """
         INSERT INTO CricketMatchData.TunedParameters
-        (TuningID, FormatName, e_value, k_factor, starting_elo, home_adv, toss_adv, win_margin, max_draw_chance, CreatedAt)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (TuningID, FormatName, e_value, k_factor, starting_elo, home_adv, toss_adv, win_margin, max_draw_chance, CreatedAt, IsAdded)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     for format_name, tp in params_by_format.items():
@@ -39,7 +41,8 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
             tp.toss_adv,
             tp.win_margin,        # if None, null is entered
             tp.max_draw_chance,
-            created_at
+            created_at,
+            True
         )
         cursor.execute(sql, data)
 

@@ -9,8 +9,8 @@ from ml.objective_function import evaluate
 def optimiseParams(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
-    init_points: int = 20,
-    n_iter:      int = 200,
+    init_points: int = 30,
+    n_iter: int = 400,
     random_state: Optional[int] = None
 ) -> TuningParams:
     """
