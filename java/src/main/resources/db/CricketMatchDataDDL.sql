@@ -89,5 +89,6 @@ CREATE TABLE CricketMatchData.TunedParameters
     win_margin DOUBLE, -- nullable if not implemented yet
     max_draw_chance DOUBLE NOT NULL,
     CreatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL,
     PRIMARY KEY(TuningID, FormatName)
 );
