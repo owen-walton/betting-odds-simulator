@@ -1,16 +1,16 @@
 from typing    import Tuple, List, Optional
 from bayes_opt  import BayesianOptimization
 
-from ..model.params import TuningParams
-from ..model.match  import Match
-from objective_function import evaluate
+from model.params import TuningParams
+from model.match  import Match
+from ml.objective_function import evaluate
 
 
 def optimiseParams(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
-    init_points: int = 5,
-    n_iter:      int = 50,
+    init_points: int = 20,
+    n_iter:      int = 200,
     random_state: Optional[int] = None
 ) -> TuningParams:
     """
@@ -23,7 +23,7 @@ def optimiseParams(
 
     Returns TuningParams instance with best factors found
     """
-    min_params, max_params = searchBounds
+    min_params, max_params = search_bounds
 
     # build pbounds
     pbounds = {

@@ -10,7 +10,7 @@ class DataSource(Enum):
 class MarginType(Enum):
     RUNS = "Runs"
     WICKETS = "Wickets"
-    ONE_INNINGS_AND_RUNS = "One Innings and Runs"
+    ONE_INNINGS_AND_RUNS = "One Innings And Runs"
     UNKNOWN = "Unknown"
 
 @dataclass

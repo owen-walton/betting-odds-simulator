@@ -1,4 +1,7 @@
-def getConn():
+import mysql.connector
+from mysql.connector import MySQLConnection
+
+def get_conn():
     return mysql.connector.connect(
     host="localhost",
     user="root",

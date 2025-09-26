@@ -1,6 +1,6 @@
 import math
-from ..model.match import Match
-from ..model.params import TuningParams
+from model.match import Match
+from model.params import TuningParams
 from typing import List
 from typing import Tuple
 

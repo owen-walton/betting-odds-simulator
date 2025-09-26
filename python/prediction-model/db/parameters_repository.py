@@ -1,9 +1,9 @@
 import mysql.connector
 from typing import Optional
-from ..model.params import TuningParams
+from model.params import TuningParams
+from db.connection import get_conn
 
-def insert_tuning_params(conn: mysql.connector.connection.MySQLConnection,
-                         params: TuningParams):
+def insert_tuning_params(params: TuningParams):
     """
     Inserts a TuningParams instance into CricketMatchData.TunedParameters
     """
@@ -22,6 +22,7 @@ def insert_tuning_params(conn: mysql.connector.connection.MySQLConnection,
         params.max_draw_chance,
     )
 
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute(sql, data)
     conn.commit()
