@@ -19,6 +19,16 @@ CREATE TABLE CricketMatchData.Team
     Name VARCHAR(120) NOT NULL UNIQUE
 );
 
+CREATE TABLE CricketMatchData.TeamFormatELO
+(
+    TeamID INT NOT NULL,
+    FormatName VARCHAR(10) NOT NULL,
+    ELO FLOAT NOT NULL,
+    PRIMARY KEY (TeamID, FormatName),
+    FOREIGN KEY (TeamID) REFERENCES CricketMatchData.Team(TeamID),
+    FOREIGN KEY (FormatName) REFERENCES CricketMatchData.MatchFormat(FormatName)
+);
+
 CREATE TABLE CricketMatchData.Venue
 (
     VenueID INT AUTO_INCREMENT PRIMARY KEY,

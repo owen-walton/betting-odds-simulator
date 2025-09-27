@@ -22,11 +22,11 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
     created_at = datetime.now(timezone.utc)
 
     # set all old models to inactive
-    cursor.execute("UPDATE CricketMatchData.TunedParameters SET IsAdded = FALSE;")
+    cursor.execute("UPDATE CricketMatchData.TunedParameters SET IsActive = FALSE;")
 
     sql = """
         INSERT INTO CricketMatchData.TunedParameters
-        (TuningID, FormatName, e_value, k_factor, starting_elo, home_adv, toss_adv, win_margin, max_draw_chance, CreatedAt, IsAdded)
+        (TuningID, FormatName, e_value, k_factor, starting_elo, home_adv, toss_adv, win_margin, max_draw_chance, CreatedAt, IsActive)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 

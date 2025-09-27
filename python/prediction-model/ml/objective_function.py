@@ -1,10 +1,9 @@
 import math
 from model.match import Match
 from model.params import TuningParams
-from typing import List
-from typing import Tuple
+from typing import List, Dict, Tuple
 
-def evaluate(params: TuningParams, matches: List[Match]) -> float:
+def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[int, float]]:
     team_ratings = {}  # team_id -> current ELO
     negative_log_loss = 0.0
     num_matches = 0
@@ -57,8 +56,7 @@ def evaluate(params: TuningParams, matches: List[Match]) -> float:
         team_ratings[team1_id] = team_ratings[team1_id] + gain
         team_ratings[team2_id] = team_ratings[team2_id] - gain
 
-    return negative_log_loss / max(1, num_matches)
-
+    return negative_log_loss / max(1, num_matches), team_ratings
 
 def calculate_result_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> Tuple[float, float, float]:
     """
@@ -67,6 +65,7 @@ def calculate_result_prob(team_elo: float, opposition_elo: float, params: Tuning
     - draw
     - opposition win
     based on ELO ratings and TuningParams.
+    ELOs must be pre tuned before this function is called.
     """
     diff = team_elo - opposition_elo
 

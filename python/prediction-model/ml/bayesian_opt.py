@@ -6,11 +6,11 @@ from model.match  import Match
 from ml.objective_function import evaluate
 
 
-def optimiseParams(
+def optimise_params(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
     init_points: int = 30,
-    n_iter: int = 400,
+    n_iter: int = 150,
     random_state: Optional[int] = None
 ) -> TuningParams:
     """
@@ -38,7 +38,8 @@ def optimiseParams(
     # wrap evaluate() so that a higher score is better (as required by bayes opt library)
     def bayes_evaluate(**kwargs) -> float:
         tp = TuningParams(**kwargs)
-        return -evaluate(tp, matches)
+        score, _ = evaluate(tp, matches)
+        return -score
 
     # create the optimiser
     optimizer = BayesianOptimization(
