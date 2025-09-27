@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class TuningParams:
     """
@@ -14,7 +15,9 @@ class TuningParams:
     home_adv: float
     toss_adv: float
     max_draw_chance: float
-    win_margin: Optional[float] = None  # currently not used
+    runs_win_margin: float
+    wickets_win_margin: float
+    one_innings_margin_bonus: float
 
     # default constructor with naive starting values
     def __init__(self,
@@ -23,12 +26,17 @@ class TuningParams:
                  starting_elo: float = 1500.0,
                  home_adv: float = 10.0,
                  toss_adv: float = 5.0,
-                 win_margin: float = None,
-                 max_draw_chance: float = 0.4):
+                 max_draw_chance: float = 0.4,
+                 runs_win_margin: float = 1.0,
+                 wickets_win_margin: float = 1.0,
+                 one_innings_margin_bonus = 1.0
+                 ):
         self.e_value = e_value
         self.k_factor = k_factor
         self.starting_elo = starting_elo
         self.home_adv = home_adv
         self.toss_adv = toss_adv
-        self.win_margin = win_margin
         self.max_draw_chance = max_draw_chance
+        self.runs_win_margin = runs_win_margin
+        self.wickets_win_margin = wickets_win_margin
+        self.one_innings_margin_bonus = one_innings_margin_bonus

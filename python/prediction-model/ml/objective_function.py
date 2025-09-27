@@ -1,5 +1,5 @@
 import math
-from model.match import Match
+from model.match import Match, MarginType
 from model.params import TuningParams
 from typing import List, Dict, Tuple
 
@@ -52,10 +52,25 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
                 res = 0
         else:
             res = 0.5
+
+        if match.margin_size is None or match.margin_size == 0:
+            # match.margin_size of 0 is invalid so don't account for it
+            gain = params.k_factor * (res - win_prob)
+        elif match.margin_type == MarginType.RUNS:
+            gain = params.runs_win_margin * match.margin_size * params.k_factor * (res - win_prob)
+        elif match.margin_type == MarginType.WICKETS:
+            gain = params.wickets_win_margin * match.margin_size * params.k_factor * (res - win_prob)
+        elif match.margin_type == MarginType.ONE_INNINGS_AND_RUNS:
+            gain = params.one_innings_margin_bonus + params.runs_win_margin * match.margin_size * params.k_factor * (res - win_prob)
+        else:
+            # if margin type is unknown then don't include it in calculation
+            gain = params.k_factor * (res - win_prob)
+
         gain = params.k_factor * (res - win_prob)
         team_ratings[team1_id] = team_ratings[team1_id] + gain
         team_ratings[team2_id] = team_ratings[team2_id] - gain
 
+    print(negative_log_loss / max(1, num_matches))
     return negative_log_loss / max(1, num_matches), team_ratings
 
 def calculate_result_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> Tuple[float, float, float]:

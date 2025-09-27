@@ -33,6 +33,9 @@ def optimise_params(
         "home_adv":        (min_params.home_adv,       max_params.home_adv),
         "toss_adv":        (min_params.toss_adv,       max_params.toss_adv),
         "max_draw_chance": (min_params.max_draw_chance,max_params.max_draw_chance),
+        "runs_win_margin": (min_params.runs_win_margin, max_params.runs_win_margin),
+        "wickets_win_margin": (min_params.wickets_win_margin, max_params.wickets_win_margin),
+        "one_innings_margin_bonus": (min_params.one_innings_margin_bonus, max_params.one_innings_margin_bonus)
     }
 
     # wrap evaluate() so that a higher score is better (as required by bayes opt library)
