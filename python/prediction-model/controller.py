@@ -13,8 +13,8 @@ def tune():
     min_params = TuningParams(
         e_value=100.0,
         k_factor=5.0,
-        home_adv=20.0,
-        toss_adv=0.0,
+        home_adv=25.0,
+        toss_adv=2.0,
         runs_win_margin=0.0,
         wickets_win_margin=0.0,
         one_innings_margin_bonus=15.0
@@ -24,11 +24,11 @@ def tune():
     max_params = TuningParams(
         e_value=550.0,
         k_factor=70.0,
-        home_adv=60.0,
-        toss_adv=30.0,
-        runs_win_margin=0.7,
-        wickets_win_margin=0.5,
-        one_innings_margin_bonus=70.0
+        home_adv=100.0,
+        toss_adv=50.0,
+        runs_win_margin=5,
+        wickets_win_margin=1,
+        one_innings_margin_bonus=60.0
     )
 
     # create the tuple
