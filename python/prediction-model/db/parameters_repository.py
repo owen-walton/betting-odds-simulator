@@ -26,9 +26,9 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
 
     sql = """
         INSERT INTO CricketMatchData.TunedParameters
-        (TuningID, FormatName, e_value, k_factor, starting_elo, home_adv, toss_adv, runs_win_margin, 
-         wickets_win_margin, one_innings_margin_bonus, max_draw_chance, CreatedAt, IsActive)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (TuningID, FormatName, e_value, k_factor, home_adv, toss_adv, runs_win_margin, 
+         wickets_win_margin, one_innings_margin_bonus, CreatedAt, IsActive)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     for format_name, tp in params_by_format.items():
@@ -37,13 +37,11 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
             format_name,
             tp.e_value,
             tp.k_factor,
-            tp.starting_elo,
             tp.home_adv,
             tp.toss_adv,
             tp.runs_win_margin,
             tp.wickets_win_margin,
             tp.one_innings_margin_bonus,
-            tp.max_draw_chance,
             created_at,
             True
         )

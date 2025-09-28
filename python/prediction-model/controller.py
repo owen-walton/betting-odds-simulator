@@ -11,28 +11,24 @@ def tune():
 
     # lower bound values
     min_params = TuningParams(
-        e_value=200.0,
-        k_factor=10.0,
-        starting_elo=1000.0,
-        home_adv=0.0,
+        e_value=100.0,
+        k_factor=5.0,
+        home_adv=20.0,
         toss_adv=0.0,
-        max_draw_chance=0.0,
         runs_win_margin=0.0,
         wickets_win_margin=0.0,
-        one_innings_margin_bonus=0.0
+        one_innings_margin_bonus=15.0
     )
 
     # upper bound values
     max_params = TuningParams(
-        e_value=800.0,
-        k_factor=80.0,
-        starting_elo=2000.0,
-        home_adv=40.0,
-        toss_adv=10.0,
-        max_draw_chance=0.3,
-        runs_win_margin=0.5,
+        e_value=550.0,
+        k_factor=70.0,
+        home_adv=60.0,
+        toss_adv=30.0,
+        runs_win_margin=0.7,
         wickets_win_margin=0.5,
-        one_innings_margin_bonus=50.0
+        one_innings_margin_bonus=70.0
     )
 
     # create the tuple
@@ -42,20 +38,19 @@ def tune():
     formats = ["T20", "ODI", "Test"]
     for match_format in formats:
         matches = get_matches(date.min, date.max, match_format)
-        evaluate(TuningParams(
+        """evaluate(TuningParams(
             starting_elo=1500.0,
             k_factor=20.0,
             home_adv=0.0,
             toss_adv=0.0,
             e_value=400.0,
-            max_draw_chance=0.18,
             one_innings_margin_bonus=0.0,
             runs_win_margin=0.0,
             wickets_win_margin=0.0
-        ), matches)
+        ), matches)"""
 
-        # params_by_format[match_format] = optimise_params(search_bounds, matches)
-        # _, final_elo_dict = evaluate(params_by_format[match_format], matches)
-        # update_elos(match_format, final_elo_dict)
+        params_by_format[match_format] = optimise_params(search_bounds, matches)
+        _, final_elo_dict = evaluate(params_by_format[match_format], matches)
+        update_elos(match_format, final_elo_dict)
 
     insert_tuning_params(params_by_format)

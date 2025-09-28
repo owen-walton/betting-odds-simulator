@@ -9,8 +9,8 @@ from ml.objective_function import evaluate
 def optimise_params(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
-    init_points: int = 30,
-    n_iter: int = 150,
+    init_points: int = 24,
+    n_iter: int = 130,
     random_state: Optional[int] = None
 ) -> TuningParams:
     """
@@ -29,10 +29,8 @@ def optimise_params(
     pbounds = {
         "e_value":         (min_params.e_value,        max_params.e_value),
         "k_factor":        (min_params.k_factor,       max_params.k_factor),
-        "starting_elo":    (min_params.starting_elo,   max_params.starting_elo),
         "home_adv":        (min_params.home_adv,       max_params.home_adv),
         "toss_adv":        (min_params.toss_adv,       max_params.toss_adv),
-        "max_draw_chance": (min_params.max_draw_chance,max_params.max_draw_chance),
         "runs_win_margin": (min_params.runs_win_margin, max_params.runs_win_margin),
         "wickets_win_margin": (min_params.wickets_win_margin, max_params.wickets_win_margin),
         "one_innings_margin_bonus": (min_params.one_innings_margin_bonus, max_params.one_innings_margin_bonus)

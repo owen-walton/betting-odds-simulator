@@ -10,7 +10,10 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
 
     for match in sorted(matches, key=lambda m: m.date):
         team_list = list(match.teams.keys())
-        if len(team_list) != 2:
+
+        # ignore draws
+        # this is because in cricket draw chance is a complex trend and unpredictable based on the data available
+        if match.winning_team_id is None or len(team_list) != 2:
             continue
 
         team1_id, team2_id = team_list
@@ -19,7 +22,7 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
 
         for team_id in (team1_id, team2_id):
             if team_id not in team_ratings:
-                team_ratings[team_id] = params.starting_elo
+                team_ratings[team_id] = 1500.0
 
         team1rating = team_ratings[team1_id]
         team2rating = team_ratings[team2_id]
@@ -38,20 +41,17 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
                 team2rating += params.toss_adv
 
         # Calculate expected probability for each result type w/d/l
-        win_prob, draw_prob, loss_prob = calculate_result_prob(team1rating, team2rating, params)
+        win_prob = calculate_win_prob(team1rating, team2rating, params)
 
         # Calculate log loss against actual result
-        negative_log_loss += match_log_loss(match, team1_id, team2_id, (win_prob, draw_prob, loss_prob))
+        negative_log_loss += match_log_loss(match, team1_id, team2_id, win_prob)
         num_matches += 1
 
-        # gain is added to team1 (if team2 wins the gain will be a negative value)
-        if match.winning_team_id is not None:
-            if match.winning_team_id == team1_id:
-                res = 1
-            else:
-                res = 0
+        # gain is added to team1 (if team2 has won the gain for team1 will be a negative value)
+        if match.winning_team_id == team1_id:
+            res = 1
         else:
-            res = 0.5
+            res = 0
 
         if match.margin_size is None or match.margin_size == 0:
             # match.margin_size of 0 is invalid so don't account for it
@@ -70,55 +70,31 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
         team_ratings[team1_id] = team_ratings[team1_id] + gain
         team_ratings[team2_id] = team_ratings[team2_id] - gain
 
-    print(negative_log_loss / max(1, num_matches))
     return negative_log_loss / max(1, num_matches), team_ratings
 
-def calculate_result_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> Tuple[float, float, float]:
+def calculate_win_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> float:
     """
-    Calculate probabilities for:
-    - team win
-    - draw
-    - opposition win
+    Calculate probability team referenced by team_elo (not opposition_elo) wins the game.
+    Doesn't account for draws
     based on ELO ratings and TuningParams.
     ELOs must be pre tuned before this function is called.
     """
     diff = team_elo - opposition_elo
 
-    # expected win probability without draw
-    e_win = 1 / (1 + 10 ** (-diff / params.e_value))
+    # expected win probability
+    return 1 / (1 + 10 ** (-diff / params.e_value))
 
-    # draw probability increases when ratings are close
-    e_draw = params.max_draw_chance * max(0.0, 1 - abs(diff) / params.e_value)
-    e_draw = min(e_draw, params.max_draw_chance)
-
-    # adjust win/loss probabilities to account for draw chance so sum = 1
-    e_win_adj = e_win * (1 - e_draw)
-    e_loss_adj = 1 - e_win_adj - e_draw
-
-    # ensure sum = 1 (avoids rounding issues)
-    total = e_win_adj + e_draw + e_loss_adj
-    e_win_adj, e_draw_adj, e_loss_adj = (e_win_adj / total, e_draw / total, e_loss_adj / total)
-
-    return e_win_adj, e_draw_adj, e_loss_adj
-
-
-import math
-
-
-def match_log_loss(match: Match, team1_id: int, team2_id: int, result: tuple) -> float:
+def match_log_loss(match: Match, team1_id: int, team2_id: int, win_prob: float) -> float:
     """
-    Calculates log loss for a single match based on predicted probabilities
-    and actual outcome stored in Match.
+    Calculates log loss for a single match based on win probability and the outcome of match.
     """
     epsilon = 1e-8
-    win_prob, draw_prob, loss_prob = result
 
-    if match.winning_team_id is None:
-        actual_prob = draw_prob
-    elif match.winning_team_id == team1_id:
+
+    if match.winning_team_id == team1_id:
         actual_prob = win_prob
     elif match.winning_team_id == team2_id:
-        actual_prob = loss_prob
+        actual_prob = 1 - win_prob
     else:
         # unexpected team ID, treat as unknown; assign log loss 0
         return 0.0

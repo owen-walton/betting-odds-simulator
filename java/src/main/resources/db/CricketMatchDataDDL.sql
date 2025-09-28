@@ -93,13 +93,11 @@ CREATE TABLE CricketMatchData.TunedParameters
     FormatName VARCHAR(10) NOT NULL,
     e_value DOUBLE NOT NULL,
     k_factor DOUBLE NOT NULL,
-    starting_elo DOUBLE NOT NULL,
     home_adv DOUBLE NOT NULL,
     toss_adv DOUBLE NOT NULL,
     runs_win_margin DOUBLE NOT NULL,
     wickets_win_margin DOUBLE NOT NULL,
     one_innings_margin_bonus DOUBLE NOT NULL,
-    max_draw_chance DOUBLE NOT NULL,
     CreatedAt TIMESTAMP,
     IsActive BOOLEAN NOT NULL,
     PRIMARY KEY(TuningID, FormatName)
