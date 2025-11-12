@@ -24,12 +24,10 @@ public class DatabaseInitialiser {
             for (String s : statements) {
                 s = s.trim();
                 if (!s.isEmpty()) {
-                    stmt.addBatch(s);
+                    stmt.execute(s);
                 }
             }
-
-            stmt.executeBatch(); // execute all statements in one go
-
+            conn.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
