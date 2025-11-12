@@ -4,27 +4,21 @@
  */
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
-import com.betwise.oddscalc.entity.Venue;
-import com.betwise.oddscalc.entity.VenueEditState;
 import com.betwise.oddscalc.entity.VenueKey;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 // class is made closeable as it is designed to only be used once per bulk insert
 // this means the -1 ids in canonical map don't require updating after the insert
 // and the recreation of the instance is not memory expensive because it is for bulk insert not single insert
 public class VenueDeduplicator implements AutoCloseable {
-    private Map<VenueKey, VenueEditState> canonicalVenues;
     private boolean isClosed;
     private Map<String, String> groundAliasMap;
     private Map<String, String> cityAliasMap;
 
-    public VenueDeduplicator(Map<VenueKey, VenueEditState> canonicalVenues) {
+    public VenueDeduplicator() {
         this.isClosed = false;
-        this.canonicalVenues = canonicalVenues;
         createAliasMaps();
     }
 
@@ -33,7 +27,7 @@ public class VenueDeduplicator implements AutoCloseable {
     // otherwise return the trueID of the duplicate
     // and if new venue takes priority over the existing one, use editCanonicalMap() to change VenueKey but keep ID
     // Boolean value of true represents that the details of the venue have been changed and vice versa
-    public int findAndUpdateDuplicateEntry(Venue venue) {
+    /*public int findAndUpdateDuplicateEntry(Venue venue) {
         VenueKey newKey = venue.getVenueKey();
         VenueKey matchKey = null;
         VenueEditState matchState = null;
@@ -67,7 +61,7 @@ public class VenueDeduplicator implements AutoCloseable {
         }
 
         return matchState.getId();
-    }
+    }*/
 
     public boolean isSameVenue(String name, String city, String exName, String exCity) {
         // Create VenueKey objects
@@ -160,6 +154,7 @@ public class VenueDeduplicator implements AutoCloseable {
         return s.replaceAll("\\d+$", "");
     }
 
+    /*
     public Set<Venue> getEditedAndNewVenues() {
         Set<Venue> changedVenues = new HashSet<>();
         for (Map.Entry<VenueKey, VenueEditState> entry : getCanonicalVenues().entrySet()) {
@@ -170,7 +165,6 @@ public class VenueDeduplicator implements AutoCloseable {
         return changedVenues;
     }
 
-    /*
      * Return value of this function is a set of venues which contains:
      * - The ground name and city used as a natural key in CricketMatchDataSchema
      * - The true id in the db that relates to the natural key
@@ -180,6 +174,7 @@ public class VenueDeduplicator implements AutoCloseable {
      * - True id of unique venues cannot be retrieved as canonicalList not added to db yet so they have venueID of -1 so
      *   service layer knows to call VenueDAO.getIDsIntoObjects() for those venues specifically once added to db
      */
+    /*
     public Set<Venue> updateCanonicalList(Set<Venue> venuesToAdd) {
         Set<Venue> trueIDvenues = new HashSet<>();
         for (Venue v : venuesToAdd) {
@@ -230,7 +225,7 @@ public class VenueDeduplicator implements AutoCloseable {
             this.canonicalVenues.put(newVenueKey, new VenueEditState(id, true));
         }
 
-    }
+    }*/
 
     public void checkClosed() {
         if (isClosed) {
@@ -284,7 +279,6 @@ public class VenueDeduplicator implements AutoCloseable {
     @Override
     public void close() throws Exception {
         isClosed = true;
-        canonicalVenues = null; // free up memory
         cityAliasMap = null;
         groundAliasMap = null;
     }

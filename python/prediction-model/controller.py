@@ -20,25 +20,25 @@ class Controller:
         Returns:
             (params_by_format, log_loss_by_format)
         """
-        # unified min / max to use for all formats
+        # search parameters
         min_params = TuningParams(
-            e_value=200.0,  # smoother behaviour lower bound
-            k_factor=1.0,  # allow very slow learning if needed
-            home_adv=10.0,  # allow small home effect
-            toss_adv=0.0,  # allow zero toss effect
-            runs_win_margin=0.0,  # typically near-zero
-            wickets_win_margin=0.0,  # allow zero but let BO raise it
-            one_innings_margin_bonus=0.0  # 0 for limited overs; can be used in Tests
+            e_value=200.0,
+            k_factor=1.0,
+            home_adv=10.0,
+            toss_adv=0.0,
+            runs_win_margin=0.0,
+            wickets_win_margin=0.0,
+            one_innings_margin_bonus=0.0
         )
 
         max_params = TuningParams(
-            e_value=1200.0,  # raised upper bound for very smooth curves
-            k_factor=50.0,  # high enough to explore more aggressive updates
-            home_adv=150.0,  # allow strong home-field effects if present
-            toss_adv=60.0,  # allow large toss bias if data supports it
-            runs_win_margin=2.0,  # small headroom if useful
-            wickets_win_margin=3.0,  # extended headroom
-            one_innings_margin_bonus=100.0  # wide for Tests; harmless for T20/ODI if unused
+            e_value=1200.0,
+            k_factor=50.0,
+            home_adv=150.0,
+            toss_adv=60.0,
+            runs_win_margin=2.0,
+            wickets_win_margin=3.0,
+            one_innings_margin_bonus=100.0
         )
 
         search_bounds: Tuple[TuningParams, TuningParams] = (min_params, max_params)

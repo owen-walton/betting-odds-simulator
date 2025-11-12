@@ -39,7 +39,7 @@ if __name__ == "__main__":
             print("Running test with random guessing (control test)")
             rand_loss = controller.test_rand_avg_loss()
             print("Running test against the Main Prediction Model")
-            model_loss = controller.test_tune(2)
+            model_loss = controller.test_tune(3)
 
             print("\n================= MODEL PERFORMANCE SUMMARY =================")
             print("------- Evaluation metric: Log loss (lower is better) -------\n")

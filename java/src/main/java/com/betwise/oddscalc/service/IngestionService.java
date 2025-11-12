@@ -88,7 +88,7 @@ public class IngestionService {
                 MatchResultDAO resultDAO = new MatchResultDAO();
                 MatchTeamDAO matchTeamDAO = new MatchTeamDAO();
                 VenueDAO venueDAO = new VenueDAO();
-                VenueDeduplicator venueDeduplicator = new VenueDeduplicator(null)
+                VenueDeduplicator venueDeduplicator = new VenueDeduplicator()
         ) {
             // insert teams and venues
             TeamAliasMap teamAliasMap = new TeamAliasMap();
@@ -153,7 +153,7 @@ public class IngestionService {
     }
 
     // bugged and fix was not findable so rewritten
-    private CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
+    /*private CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
         try (
                 VenueDAO venueDAO = new VenueDAO();
                 VenueDeduplicator venueDeduplicator = new VenueDeduplicator(initialiseCanonicalVenues(venueDAO))
@@ -167,13 +167,14 @@ public class IngestionService {
 
             // add all new venues and edit all overwritten venues to db
             venueDAO.bulkInsertAndUpdate(new ArrayList<>(venueDeduplicator.getEditedAndNewVenues()));
-
+*/
             /*
             * - Get the new generated ids into the Venue objects that have a -1 id and call .updateVenueKey() on all.
             * - Do not need to get the new ids into the venueDuplicator.canonicalMap because it is use once per bulk
             * insert (not per single insert) so a new venueDuplicator will be redefined with newly correct map next
             * time used.
              */
+    /*
             Set<Venue> requireID = new HashSet<>();
             Set<Venue> trueID = new HashSet<>();
             for (Venue v : venuesToAdd) {
@@ -201,5 +202,5 @@ public class IngestionService {
             canonicalVenues.put(v.getVenueKey(), new VenueEditState(v.getVenueID(), false));
         }
         return canonicalVenues;
-    }
+    }*/
 }
