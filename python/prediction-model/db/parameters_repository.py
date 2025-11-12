@@ -49,3 +49,41 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
 
     conn.commit()
     cursor.close()
+
+def get_latest_tuning_params() -> Dict[str, TuningParams]:
+    """
+    Fetch the most recent active tuning parameters for each format from the
+    CricketMatchData.TunedParameters table.
+
+    Returns:
+        Dict[str, TuningParams] mapping format name ("Test", "ODI", "T20") to TuningParams.
+    """
+    conn = get_conn()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+        SELECT FormatName, e_value, k_factor, home_adv, toss_adv,
+               runs_win_margin, wickets_win_margin, one_innings_margin_bonus
+        FROM CricketMatchData.TunedParameters
+        WHERE IsActive = TRUE
+    """
+
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+
+    params_by_format: Dict[str, TuningParams] = {}
+
+    for row in rows:
+        params_by_format[row["FormatName"]] = TuningParams(
+            e_value=row["e_value"],
+            k_factor=row["k_factor"],
+            home_adv=row["home_adv"],
+            toss_adv=row["toss_adv"],
+            runs_win_margin=row["runs_win_margin"],
+            wickets_win_margin=row["wickets_win_margin"],
+            one_innings_margin_bonus=row["one_innings_margin_bonus"],
+        )
+
+    cursor.close()
+    conn.close()
+    return params_by_format

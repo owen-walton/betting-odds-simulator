@@ -1,5 +1,5 @@
-from typing    import Tuple, List, Optional
-from bayes_opt  import BayesianOptimization
+from typing import Tuple, List, Optional
+from bayes_opt import BayesianOptimization
 
 from model.params import TuningParams
 from model.match  import Match
@@ -9,10 +9,10 @@ from ml.objective_function import evaluate
 def optimise_params(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
-    init_points: int = 24,
-    n_iter: int = 130,
+    init_points: int = 16,
+    n_iter: int = 150,
     random_state: Optional[int] = None
-) -> TuningParams:
+) -> Tuple[TuningParams, float]:
     """
     TODO May need batching in future
     searchBounds: (minParams, maxParams)
@@ -46,7 +46,7 @@ def optimise_params(
     optimizer = BayesianOptimization(
         f=bayes_evaluate,
         pbounds=pbounds,
-        verbose=2,
+        verbose=1,
         random_state=random_state
     )
 
@@ -55,5 +55,6 @@ def optimise_params(
 
     # return best parameters
     print(optimizer.max["target"])
+    best_log_loss = -optimizer.max["target"]
     best_params_dict = optimizer.max["params"]
-    return TuningParams(**best_params_dict)
+    return TuningParams(**best_params_dict), best_log_loss

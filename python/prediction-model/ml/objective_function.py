@@ -11,9 +11,14 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
     for match in sorted(matches, key=lambda m: m.date):
         team_list = list(match.teams.keys())
 
-        # ignore draws
-        # this is because in cricket draw chance is a complex trend and unpredictable based on the data available
-        if match.winning_team_id is None or len(team_list) != 2:
+        if len(team_list) != 2:
+            continue
+
+        # In cricket draw chance is a complex trend and unpredictable based on the data available
+        # so in practice the betting shop will never allow bets on a draw,
+        # meaning any draw is profitable to the company so no loss is added to the Negative Log Loss
+        if match.winning_team_id is None:
+            num_matches += 1
             continue
 
         team1_id, team2_id = team_list
@@ -27,21 +32,10 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
         team1rating = team_ratings[team1_id]
         team2rating = team_ratings[team2_id]
 
-        # Apply home advantage (additive)
-        if is_home1:
-            team1rating += params.home_adv
-        if is_home2:
-            team2rating += params.home_adv
 
-        # Apply toss advantage (additive)
-        if match.toss_winner_id is not None:
-            if match.toss_winner_id == team1_id:
-                team1rating += params.toss_adv
-            elif match.toss_winner_id == team2_id:
-                team2rating += params.toss_adv
-
-        # Calculate expected probability for each result type w/d/l
-        win_prob = calculate_win_prob(team1rating, team2rating, params)
+        # Calculate expected win prob for team1
+        win_prob = predict(team1rating, team2rating, params, is_home1=is_home1, is_home2=is_home2,
+                           toss_winner_id=match.toss_winner_id, team1_id=team1_id, team2_id=team2_id)
 
         # Calculate log loss against actual result
         negative_log_loss += match_log_loss(match, team1_id, team2_id, win_prob)
@@ -66,11 +60,41 @@ def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[in
             # if margin type is unknown then don't include it in calculation
             gain = params.k_factor * (res - win_prob)
 
-        gain = params.k_factor * (res - win_prob)
         team_ratings[team1_id] = team_ratings[team1_id] + gain
         team_ratings[team2_id] = team_ratings[team2_id] - gain
 
     return negative_log_loss / max(1, num_matches), team_ratings
+
+def predict(
+    team1_elo: float,
+    team2_elo: float,
+    params: TuningParams,
+    is_home1: bool = False,
+    is_home2: bool = False,
+    toss_winner_id: int = None,
+    team1_id: int = None,
+    team2_id: int = None,
+) -> float:
+    """
+    Predict win probability for team1 given both teams' ELOs and match conditions.
+    Returns a probability (0.0–1.0) that team1 wins.
+    """
+
+    # Apply home advantage
+    if is_home1:
+        team1_elo += params.home_adv
+    if is_home2:
+        team2_elo += params.home_adv
+
+    # Apply toss advantage
+    if toss_winner_id is not None and team1_id is not None and team2_id is not None:
+        if toss_winner_id == team1_id:
+            team1_elo += params.toss_adv
+        elif toss_winner_id == team2_id:
+            team2_elo += params.toss_adv
+
+    # Compute expected probability
+    return calculate_win_prob(team1_elo, team2_elo, params)
 
 def calculate_win_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> float:
     """
@@ -80,9 +104,12 @@ def calculate_win_prob(team_elo: float, opposition_elo: float, params: TuningPar
     ELOs must be pre tuned before this function is called.
     """
     diff = team_elo - opposition_elo
+    exponent = -diff / params.e_value
 
-    # expected win probability
-    return 1 / (1 + 10 ** (-diff / params.e_value))
+    # Clamp exponent to avoid overflow - this was encountered when the bayesian tested an extreme
+    exponent = max(min(exponent, 50), -50)
+
+    return 1 / (1 + 10 ** exponent)
 
 def match_log_loss(match: Match, team1_id: int, team2_id: int, win_prob: float) -> float:
     """
@@ -102,3 +129,34 @@ def match_log_loss(match: Match, team1_id: int, team2_id: int, win_prob: float) 
     # log loss = -log(predicted probability of actual outcome)
     log_loss = -math.log(max(actual_prob, epsilon))
     return log_loss
+
+def evaluate_rand_log_loss(matches: List[Match]) -> float:
+    """
+    Baseline evaluation: calculates the average log loss assuming
+    a random 50/50 prediction between the two teams (no draw bets).
+
+    Draws are treated as profitable for the house (no loss added, but still counted).
+    """
+    negative_log_loss = 0.0
+    num_matches = 0
+    random_prob = 0.5  # constant 50/50 probability
+
+    for match in sorted(matches, key=lambda m: m.date):
+        team_list = list(match.teams.keys())
+
+        if len(team_list) != 2:
+            continue
+
+        # Treat draws as house wins — no loss added, still counted
+        if match.winning_team_id is None:
+            num_matches += 1
+            continue
+
+        team1_id, team2_id = team_list
+
+        # Use the existing log loss helper for consistency
+        negative_log_loss += match_log_loss(match, team1_id, team2_id, random_prob)
+        num_matches += 1
+
+    avg_log_loss = negative_log_loss / max(1, num_matches)
+    return avg_log_loss
