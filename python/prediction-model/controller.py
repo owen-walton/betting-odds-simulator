@@ -33,7 +33,7 @@ class Controller:
 
         max_params = TuningParams(
             e_value=1200.0,
-            k_factor=50.0,
+            k_factor=40.0,
             home_adv=150.0,
             toss_adv=60.0,
             runs_win_margin=2.0,
