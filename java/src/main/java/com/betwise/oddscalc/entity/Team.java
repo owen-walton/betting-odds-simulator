@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Container class that mirrors a singular record in the Team database table
+ */
+
 package com.betwise.oddscalc.entity;
 
 public class Team {
@@ -14,6 +19,9 @@ public class Team {
         this.name = name;
     }
 
+    //============================================================================
+    // Getters and Setters
+    //============================================================================
     public int getTeamID() {
         return teamID;
     }

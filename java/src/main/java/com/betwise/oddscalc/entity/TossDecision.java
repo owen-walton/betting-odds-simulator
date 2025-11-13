@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Mirrors the Enum field in the MySQL database, as part of MatchResult table
+ */
+
 package com.betwise.oddscalc.entity;
 
 public enum TossDecision {

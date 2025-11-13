@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Container class that mirrors a singular record in the Venue database table
+ */
+
 package com.betwise.oddscalc.entity;
 
 public class Venue {

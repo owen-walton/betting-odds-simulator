@@ -1,3 +1,12 @@
+/**
+ * @author Owen Walton
+ * Container class that stores the data required to identify a unique team obejct,
+ * TeamKey refers to the 'natural key' of a team,
+ * so that if the teamID is unknown, it can still be referenced as a foreign key in other objects
+ *
+ * Java Record is suitable because in order to maintain data relationships, it should be immutable + easily comparible
+ */
+
 package com.betwise.oddscalc.entity;
 
 import java.util.Objects;
