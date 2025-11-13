@@ -2,6 +2,7 @@
  * @author Owen Walton
  * @aim a helper class for Main.java that separates the validation and Scanner logic from prompt/response
  */
+
 package com.betwise.oddscalc.main;
 
 import java.util.Scanner;

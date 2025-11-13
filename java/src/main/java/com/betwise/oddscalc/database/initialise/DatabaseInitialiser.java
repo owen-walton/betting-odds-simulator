@@ -1,3 +1,10 @@
+/**
+ * @author Owen Walton
+ * Allows the DDL to be run within the code
+ * ,
+ * @note: The JDBC connection is reliant on the CricketMatchData database
+ * so it can only be used to overwrite a DB not initialise from scratch
+ */
 package com.betwise.oddscalc.database.initialise;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
@@ -11,6 +18,7 @@ import java.sql.Statement;
 
 public class DatabaseInitialiser {
 
+    // read queries from file then execute with JDBC
     public void runDDL() {
         DBConnection dbConnection = new DBConnection();
         String DDL_PATH_IN_RESOURCES = "/db/CricketMatchDataDDL.sql";
@@ -33,6 +41,7 @@ public class DatabaseInitialiser {
         }
     }
 
+    // helper to read in the SQL queries from the file
     private String readFileInResources(String pathInResources) {
         StringBuilder sb = new StringBuilder();
         try (InputStream is = getClass().getResourceAsStream(pathInResources)) {

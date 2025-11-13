@@ -1,9 +1,18 @@
+/**
+ * @author Owen Walton
+ * Container object that represents the ENTIRE database schema (only the tables that hold match data though)
+ * For efficiency when inserting, each table has a list storing its container object records, just like the tables
+ * ,
+ * This container class requires some smart functionality due to the need for mutibility at times
+ */
+
 package com.betwise.oddscalc.entity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CricketMatchDataSchema {
+
     private List<Team> teams;
     private List<Venue> venues;
     private List<TeamHomeVenue> teamHomeVenues;
@@ -36,7 +45,9 @@ public class CricketMatchDataSchema {
         this.matchTeams = matchTeams;
     }
 
-    // getters and setters
+    //============================================================================
+    // Getters and Setters
+    //============================================================================
     public List<Venue> getVenues() {
         return venues;
     }
@@ -85,6 +96,13 @@ public class CricketMatchDataSchema {
         this.matchTeams = matchTeams;
     }
 
+    //============================================================================
+    // Smart methods
+    //============================================================================
+
+    // takes in a Team object with the correct id,
+    // anywhere that the TeamKey in the passed-in object is found within the schema,
+    // update the teamID to match the new correct one
     public void updateTeamKey(Team team) {
         String teamName = team.getName().trim().toLowerCase();
 
@@ -104,9 +122,12 @@ public class CricketMatchDataSchema {
         }
     }
 
+    // sometimes a more canonical name for an existing Team is come across,
+    // then this function is called to replace that team's name
     public void replaceTeamNameEverywhere(String newName, String oldName) {
+        // safety check
         if (newName == null || oldName == null || newName.isEmpty() || oldName.isEmpty()) {
-            return; // safety check
+            return;
         }
 
         String oldNameNorm = oldName.trim().toLowerCase();
@@ -141,6 +162,9 @@ public class CricketMatchDataSchema {
         }
     }
 
+    // takes in a Venue object with the correct id,
+    // anywhere that the VenueKey in the passed-in object is found within the schema,
+    // update the venueID to match the new correct one
     public void updateVenueKey(Venue venue) {
         String ground = venue.getGroundName().trim().toLowerCase();
         String city = venue.getCity().trim().toLowerCase();
@@ -154,6 +178,7 @@ public class CricketMatchDataSchema {
         }
     }
 
+    // takes in a temporary instance of this class and adds all the values in the temp's lists to this class's lists
     public void appendSchema(CricketMatchDataSchema tempSchema) {
         if (tempSchema.getTeams() != null) {
             this.teams.addAll(tempSchema.getTeams());
@@ -174,6 +199,10 @@ public class CricketMatchDataSchema {
             this.matchTeams.addAll(tempSchema.getMatchTeams());
         }
     }
+
+    //============================================================================
+    // toString
+    //============================================================================
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("CricketMatchDataSchema {")

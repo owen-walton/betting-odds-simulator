@@ -1,3 +1,13 @@
+/**
+ * @author Owen Walton
+ * This class is used to coordinate all the ingestion logic
+ * so that the controller only needs to access this and DatabaseInitialiser.java
+ * ,
+ * this class is designed to keep different parts of the program
+ * (e.g/ DB interaction, API requests, Sheet parsing) separate so that the design is modular and clean
+ * and allowing clear abstraction when debugging and making further edits.
+ */
+
 package com.betwise.oddscalc.service;
 
 import com.betwise.oddscalc.database.dao.*;
@@ -12,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class IngestionService {
+    // heavy logic behind team home venue population is handled in DAO layer but this wrapper provides an access point
     public void populateTeamHomeVenue() {
         System.out.println("Populating Team Home Venue");
         try (TeamHomeVenueDAO teamHomeVenueDAO = new TeamHomeVenueDAO()) {
@@ -23,6 +34,9 @@ public class IngestionService {
         }
     }
 
+    // ingest all countries from cricAPIs country list into Team table
+    // important because the teams are the method of identifying if a cricAPI match is international
+    // this is the only function that is strenuous on API hits but is only ran on launch (may need to switch key)
     public void ingestCountriesFromCricAPI() {
         System.out.println("Ingesting countries from cricAPI");
         TeamAliasMap teamAliasMap = new TeamAliasMap();
@@ -40,6 +54,7 @@ public class IngestionService {
         }
     }
 
+    // Inserts any matches from last 7 days that aren't already in DB into the DB
     public void updateLast7Days() throws IOException {
         System.out.println("Updating last 7 days");
         try (
@@ -47,11 +62,14 @@ public class IngestionService {
                 CricketMatchDAO cricketMatchDAO = new CricketMatchDAO()
         ){
             System.out.println("Initialising client");
+            // give client team names from DB so it can only do international matches without having to talk to DB layer
             CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), teamDAO.getAllTeamNames());
 
             System.out.println("Beginning parse");
+            // create a temporary schema object to store the matches parsed
             CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1));
 
+            // insert the temp schema to DB
             uploadCricketMatchDataSchema(schema);
         } finally {
             System.out.println("Last 7 days updated");
@@ -59,10 +77,13 @@ public class IngestionService {
 
     }
 
+    // handles the batching of the cricsheet ingestion due to its size (causing java heap errors)
+    // instantiates the cricSheetParser to get a schema of the matches batch,
+    // then calling this.uploadCricketMatchDataSchema() to handle the smart insert
     public void ingestCricSheet() {
+        final int BATCH_SIZE = 500;
         CricSheetParser cricSheetParser = new CricSheetParser();
         List<String> allMatchIDs = cricSheetParser.getInternationalMatchIDs();
-        final int BATCH_SIZE = 500;
         int numMatches = allMatchIDs.size();
 
         for (int i = 0; i < numMatches; i += BATCH_SIZE) {
@@ -81,6 +102,8 @@ public class IngestionService {
         }
     }
 
+    // use bulk inserts to efficiently insert schema object into DB,
+    // also handling complex Venue and Team de-duplication before inserting
     private void uploadCricketMatchDataSchema(CricketMatchDataSchema schema) {
         try (
                 TeamDAO teamDAO = new TeamDAO();
@@ -151,56 +174,4 @@ public class IngestionService {
         } catch (Exception ignored) {
         }
     }
-
-    // bugged and fix was not findable so rewritten
-    /*private CricketMatchDataSchema uploadVenues(CricketMatchDataSchema schema) {
-        try (
-                VenueDAO venueDAO = new VenueDAO();
-                VenueDeduplicator venueDeduplicator = new VenueDeduplicator(initialiseCanonicalVenues(venueDAO))
-        )
-        {
-            // get all venues to be added
-            Set<Venue> venuesToAdd = new HashSet<>(schema.getVenues());
-
-            // get trueIDs or -1 into venueIDs in venuesToAdd and update in memory copy of Venue table
-            venuesToAdd = venueDeduplicator.updateCanonicalList(venuesToAdd);
-
-            // add all new venues and edit all overwritten venues to db
-            venueDAO.bulkInsertAndUpdate(new ArrayList<>(venueDeduplicator.getEditedAndNewVenues()));
-*/
-            /*
-            * - Get the new generated ids into the Venue objects that have a -1 id and call .updateVenueKey() on all.
-            * - Do not need to get the new ids into the venueDuplicator.canonicalMap because it is use once per bulk
-            * insert (not per single insert) so a new venueDuplicator will be redefined with newly correct map next
-            * time used.
-             */
-    /*
-            Set<Venue> requireID = new HashSet<>();
-            Set<Venue> trueID = new HashSet<>();
-            for (Venue v : venuesToAdd) {
-                if (v.getVenueID() == -1) {
-                    requireID.add(v);
-                } else {
-                    trueID.add(v);
-                }
-            }
-            trueID.addAll(venueDAO.getIDsIntoObjects(new ArrayList<>(requireID)));
-            for (Venue venue : trueID) {
-                schema.updateVenueKey(venue);
-            }
-
-            return schema;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Map<VenueKey, VenueEditState> initialiseCanonicalVenues(VenueDAO venueDAO) {
-        Map<VenueKey, VenueEditState> canonicalVenues = new HashMap<>();
-        for (Venue v : venueDAO.getAllVenues()) {
-            canonicalVenues.put(v.getVenueKey(), new VenueEditState(v.getVenueID(), false));
-        }
-        return canonicalVenues;
-    }*/
 }
