@@ -1,11 +1,19 @@
+/**
+ * @author Owen Walton
+ * Container class that mirrors a singular record in the CricketMatch database table
+ * ,
+ * Additionally to the DB fields, object stores a VenueKey Java Record for when the Venue it refers to
+ * has not yet been inserted to DB so has no primary key, meaning to keep the foreign reference,
+ * natural key, (groundName, city) must be stored
+ */
 package com.betwise.oddscalc.entity;
 
 import java.time.LocalDate;
 
 public class CricketMatch {
-    private String matchID;
+    private String matchID; // part of composite PK
     private LocalDate startDate;
-    private DataSource dataSource;
+    private DataSource dataSource; // CRICSHEET, CRICAPI - part of composite PK
     private String formatName;
     private int venueID;
     private VenueKey venueNaturalKey;
@@ -19,6 +27,9 @@ public class CricketMatch {
         this.venueNaturalKey = venueNaturalKey;
     }
 
+    //============================================================================
+    // Getters and Setters
+    //============================================================================
     public String getMatchID() {
         return matchID;
     }
@@ -67,6 +78,9 @@ public class CricketMatch {
         this.venueNaturalKey = venueNaturalKey;
     }
 
+    //============================================================================
+    // Comparison methods
+    //============================================================================
     @Override
     public String toString() {
         return "CricketMatch{" +

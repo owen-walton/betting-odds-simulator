@@ -1,5 +1,12 @@
-package com.betwise.oddscalc.main;
+/**
+ * @author Owen Walton
+ * @aim Entry point for the program, handles the menu and input
+ * - uses InputHelper.java to handle the validation and Scanner logic
+ * - Stores no back-end logic:
+ *    - only input and output to determine what branch of the program to tell Controller to run
+ */
 
+package com.betwise.oddscalc.main;
 
 import com.betwise.oddscalc.controller.Controller;
 

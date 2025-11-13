@@ -368,7 +368,6 @@ public class CricAPIClient {
 
         // build schema
         return new CricketMatchDataSchema(
-                null,
                 teams,
                 List.of(new Venue(-1, venueKey)),
                 null,

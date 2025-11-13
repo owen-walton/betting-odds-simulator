@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CricketMatchDataSchema {
-    private List<MatchFormat> matchFormats;
     private List<Team> teams;
     private List<Venue> venues;
     private List<TeamHomeVenue> teamHomeVenues;
@@ -13,7 +12,6 @@ public class CricketMatchDataSchema {
     private List<MatchTeam> matchTeams;
 
     public CricketMatchDataSchema() {
-        this.matchFormats = null; // entered into db from DDL and should only be assigned when derived from db
         this.teams = new ArrayList<>();
         this.venues = new ArrayList<>();
         this.teamHomeVenues = new ArrayList<>();
@@ -23,7 +21,6 @@ public class CricketMatchDataSchema {
     }
 
     public CricketMatchDataSchema(
-            List<MatchFormat> matchFormats,
             List<Team> teams,
             List<Venue> venues,
             List<TeamHomeVenue> teamHomeVenues,
@@ -31,7 +28,6 @@ public class CricketMatchDataSchema {
             List<CricketMatch> cricketMatches,
             List<MatchTeam> matchTeams
     ) {
-        this.matchFormats = matchFormats;
         this.teams = teams;
         this.venues = venues;
         this.teamHomeVenues = teamHomeVenues;
@@ -41,14 +37,6 @@ public class CricketMatchDataSchema {
     }
 
     // getters and setters
-    public List<MatchFormat> getMatchFormats() {
-        return matchFormats;
-    }
-
-    public void setMatchFormats(List<MatchFormat> matchFormats) {
-        this.matchFormats = matchFormats;
-    }
-
     public List<Venue> getVenues() {
         return venues;
     }
@@ -167,9 +155,6 @@ public class CricketMatchDataSchema {
     }
 
     public void appendSchema(CricketMatchDataSchema tempSchema) {
-        if(tempSchema.getMatchFormats() != null) {
-            this.matchFormats.addAll(tempSchema.getMatchFormats());
-        }
         if (tempSchema.getTeams() != null) {
             this.teams.addAll(tempSchema.getTeams());
         }
@@ -192,7 +177,6 @@ public class CricketMatchDataSchema {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("CricketMatchDataSchema {")
-                .append("\n  matchFormats: ").append(matchFormats)
                 .append("\n  teams: ").append(teams)
                 .append("\n  venues: ").append(venues)
                 .append("\n  teamHomeVenues: ").append(teamHomeVenues)

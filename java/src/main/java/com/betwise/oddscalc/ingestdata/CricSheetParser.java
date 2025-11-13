@@ -156,7 +156,6 @@ public class CricSheetParser {
 
         // build all information about match into schema object
         CricketMatchDataSchema tempSchema = new CricketMatchDataSchema(
-                null, // match formats are added in DDL so doesn't matter
                 teams,
                 List.of(new Venue(-1, venueKey)),
                 null,
@@ -165,28 +164,6 @@ public class CricSheetParser {
                 matchTeams
         );
         return tempSchema;
-    }
-
-    // unfinished at determining home team
-    public Map<String, HomeStatus> getTeamsAndHomeStatus(Map<String, Object> matchMap) {
-
-        Map<String, HomeStatus> teamHomeStatusMap = new HashMap<>();
-        String[] teams = ((List<String>)ParseJSON.getValueFromMap("info/teams", matchMap)).toArray(new String[0]);
-
-        // if event is a tour, home team is implied
-        String eventName = ((String)ParseJSON.getValueFromMap("info/event/name", matchMap));
-        if (eventName.contains(" tour of ")) {
-            if (eventName.split(" ")[0].trim().equalsIgnoreCase(teams[0].trim())) {
-                teamHomeStatusMap.put(teams[0], HomeStatus.HOME);
-                teamHomeStatusMap.put(teams[1], HomeStatus.AWAY);
-                return teamHomeStatusMap;
-            } else if (eventName.split(" ")[0].equalsIgnoreCase(teams[1])) {
-                teamHomeStatusMap.put(teams[1], HomeStatus.HOME);
-                teamHomeStatusMap.put(teams[0], HomeStatus.AWAY);
-                return teamHomeStatusMap;
-            }
-        }
-        return null;
     }
 
     public String joinStringList(List<String> list) {

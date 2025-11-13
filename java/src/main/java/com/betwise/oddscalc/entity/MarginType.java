@@ -1,3 +1,9 @@
+/**
+ * @author Owen Walton
+ * Mirrors the Enum field in the MySQL database, as part of MatchResult table
+ * ,
+ * Is used to determine the weight of the number winMargin (winning by 5 wickets is different to 5 runs)
+ */
 package com.betwise.oddscalc.entity;
 
 public enum MarginType {
