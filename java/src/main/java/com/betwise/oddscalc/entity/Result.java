@@ -1,3 +1,11 @@
+/**
+ * @author Owen Walton
+ * Mirrors the Enum field in the MySQL database, as part of MatchResult table
+ * ,
+ * Is used to determine the result of the match
+ * There is no loss because the winner ID is stored in its own field, this is simply to identify events like a draw
+ */
+
 package com.betwise.oddscalc.entity;
 
 public enum Result {

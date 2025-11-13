@@ -1,6 +1,17 @@
+/**
+ * @author Owen Walton
+ * Container class that mirrors a singular record in the MatchResult database table
+ * ,
+ * Additionally to the DB fields, object stores 2 TeamKey Java Records for when the teamID the foreign key refers to
+ * has not yet been inserted to DB so has no primary key, meaning to keep the foreign reference,
+ * natural key, (teamName) must be stored,
+ * this could have been as a string but for readability and to be future change-friendly, TeamKey object is used
+ */
+
 package com.betwise.oddscalc.entity;
 
 public class MatchResult {
+
     private String matchID;
     private DataSource dataSource;
     private Integer winningTeamID; // nullable for draw/no result
@@ -36,6 +47,9 @@ public class MatchResult {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
+    //============================================================================
+    // Getters and Setters
+    //============================================================================
     public String getMatchID() {
         return matchID;
     }
@@ -116,6 +130,9 @@ public class MatchResult {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
+    //============================================================================
+    // toString
+    //============================================================================
     @Override
     public String toString() {
         return "MatchResult{" +
