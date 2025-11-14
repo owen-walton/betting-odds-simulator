@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Establishes connection with CricketMatchData DB using JDBC
+ */
+
 package com.betwise.oddscalc.database.connection;
 
 import java.io.IOException;
@@ -18,6 +23,7 @@ public class DBConnection {
         this.conn = null;
     }
 
+    // get the relevant DB credentials from the DBConfig.properties file in resources
     private void loadProperties() {
         Properties dbConfig = new Properties();
 
@@ -36,6 +42,7 @@ public class DBConnection {
         }
     }
 
+    // return JDBC connection
     public void connect() {
         try {
             if (conn == null || conn.isClosed()) {
