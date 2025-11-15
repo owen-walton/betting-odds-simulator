@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Data Access Object for MatchResult table in database
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
@@ -71,6 +76,9 @@ public class MatchResultDAO implements WriteDAO<MatchResult>, AutoCloseable {
         }
     }
 
+    // insert a List of MatchResult objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
     @Override
     public void bulkInsertIfNotExists(List<MatchResult> matchResults) {
         if (matchResults.isEmpty()) {

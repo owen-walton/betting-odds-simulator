@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Data Access Object for Team table in database
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
@@ -22,6 +27,9 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
     }
 
+    // takes in a list of Team objects with filler/unassigned ids, e.g. -1
+    // Uses the natural key of the object (name) to find the true ids from the db
+    // Then build a new list of the correct Team objects
     public List<Team> getIDsIntoObjects(List<Team> teams) {
         List<Team> newList = new ArrayList<>();
 
@@ -99,6 +107,9 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
     }
 
+    // receives a list of Team objects and remove all duplicates (keep first one then remove rest),
+    // then for the Teams still in list, search db (by natural key) for each one,
+    // if not found add it to a new list then return the new list
     public List<Team> removeExisting(List<Team> teams) {
         if (teams.isEmpty()) {
             return new ArrayList<>();
@@ -116,7 +127,8 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
         teams = uniqueTeams;
 
-        // prepare string to query existing names
+        // remove all that appear in db
+        // prepare query string
         StringBuilder sb = new StringBuilder("SELECT Name FROM Team WHERE Name IN (");
         for (int i = 0; i < teams.size(); i++) {
             sb.append("?");
@@ -158,6 +170,10 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
 
     }
 
+    // insert a List of Team objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
+    @Override
     public void bulkInsertIfNotExists(List<Team> teams) {
         teams = removeExisting(teams);
 

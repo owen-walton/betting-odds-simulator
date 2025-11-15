@@ -1,12 +1,15 @@
+/**
+ * @author Owen Walton
+ * Data Access Object for CricketMatch table in database
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
 import com.betwise.oddscalc.entity.CricketMatch;
-import com.betwise.oddscalc.entity.Team;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Arrays;
 import java.util.List;
 
 public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
@@ -42,6 +45,7 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
         return java.sql.Date.valueOf("1970-01-01"); // no matches so use a 'minimum' date
     }
 
+    // take in a CricketMatch object and insert into db
     @Override
     public boolean insert(CricketMatch cricketMatch) {
         String sql = "INSERT INTO CricketMatch (MatchID, DataSource, FormatName, VenueID, StartDate) VALUES (?, ?, ?, ?, ?)";
@@ -62,6 +66,9 @@ public class CricketMatchDAO implements WriteDAO<CricketMatch>, AutoCloseable{
         }
     }
 
+    // insert a List of CricketMatch objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
     @Override
     public void bulkInsertIfNotExists(List<CricketMatch> cricketMatches) {
         if (cricketMatches.isEmpty()) {

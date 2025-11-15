@@ -1,3 +1,11 @@
+/**
+ * @author Owen Walton
+ * Data Access Object for TeamHomeVenue table in database
+ * ,
+ * Also handles the logic/rules to populate the table,
+ * because it is based on db data not data returned by the ingestion classes
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
@@ -22,6 +30,11 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
         }
     }
 
+    // doesn't require parameters because home team is calculated based on data in database
+    // this is sometimes considered bad practice to repeat calculable data however,
+    // this method was chosen so the calculation of home teams doesn't need to be repeated, saving efficiency
+    // uses 2 passes requiring different confidence levels to ensure an accurate result in the db
+    // this is necessary because neither of the data sources provide home/away information
     public void populateTeamHomeVenue() {
         // reset table
         String sql1 = "TRUNCATE TABLE CricketMatchData.TeamHomeVenue";
@@ -129,6 +142,9 @@ public class TeamHomeVenueDAO implements WriteDAO<TeamHomeVenue>, AutoCloseable 
         }
     }
 
+    // insert a List of TeamHomeVenue objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
     @Override
     public void bulkInsertIfNotExists(List<TeamHomeVenue> teamHomeVenues) {
         if (teamHomeVenues.isEmpty()) {

@@ -47,7 +47,9 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         return venues;
     }
 
-
+    // takes in a list of Venue objects with filler/unassigned ids, e.g. -1
+    // Uses the natural key of the object (groundName, city) to find the true ids from the db
+    // Then build a new list of the correct Venue objects
     public List<Venue> getIDsIntoObjects(List<Venue> venues) {
         List<Venue> newList = new ArrayList<>();
         if (venues.isEmpty()) return newList;
@@ -86,7 +88,6 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         }
     }
 
-
     @Override
     public boolean insert(Venue venue) {
         String sql = "INSERT INTO Venue (GroundName, City) VALUES (?, ?)";
@@ -103,6 +104,10 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
             return false;
         }
     }
+
+    // receives a list of Venue objects and remove all duplicates (keep first one then remove rest),
+    // then for the Venues still in list, search db (by natural key) for each one,
+    // if not found add it to a new list then return the new list
     public List<Venue> removeExisting(List<Venue> venues) {
         if (venues.isEmpty()) {
             return new ArrayList<>();
@@ -120,6 +125,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         }
         venues = uniqueVenues;
 
+        // remove all that appear in db
         // prepare sql
         StringBuilder sb = new StringBuilder("SELECT GroundName, City FROM Venue WHERE (GroundName, City) IN (");
         for (int i = 0; i < venues.size(); i++) {
@@ -162,6 +168,9 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         }
     }
 
+    // insert a List of Venue objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
     @Override
     public void bulkInsertIfNotExists(List<Venue> venues) {
         venues = removeExisting(venues);

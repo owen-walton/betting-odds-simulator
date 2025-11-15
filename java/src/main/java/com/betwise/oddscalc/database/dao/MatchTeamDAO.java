@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Data Access Object for MatchTeam table in database
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
@@ -42,6 +47,9 @@ public class MatchTeamDAO implements WriteDAO<MatchTeam>, AutoCloseable {
         }
     }
 
+    // insert a List of MatchTeam objects to DB
+    // adds each singular object to the same batch before executing the entire batch to reduce querying
+    // this increases efficiency and reduces points of failure
     @Override
     public void bulkInsertIfNotExists(List<MatchTeam> matchTeams) {
         if (matchTeams.isEmpty()) {

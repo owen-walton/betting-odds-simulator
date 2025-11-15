@@ -1,3 +1,9 @@
+/**
+ * @author Owen Walton
+ * Implemented by all DAOs that need to insert to db
+ * @note insert() isn't used in the program however may be useful in any future developments so not removed
+ */
+
 package com.betwise.oddscalc.database.dao;
 
 import java.util.List;
