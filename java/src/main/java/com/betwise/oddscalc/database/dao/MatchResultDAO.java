@@ -6,10 +6,8 @@
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
-import com.betwise.oddscalc.entity.CricketMatch;
 import com.betwise.oddscalc.entity.MarginType;
 import com.betwise.oddscalc.entity.MatchResult;
-import com.betwise.oddscalc.entity.Result;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

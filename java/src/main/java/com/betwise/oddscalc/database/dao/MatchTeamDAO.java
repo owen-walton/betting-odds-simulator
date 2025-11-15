@@ -6,7 +6,6 @@
 package com.betwise.oddscalc.database.dao;
 
 import com.betwise.oddscalc.database.connection.DBConnection;
-import com.betwise.oddscalc.entity.MatchResult;
 import com.betwise.oddscalc.entity.MatchTeam;
 
 import java.sql.Connection;
