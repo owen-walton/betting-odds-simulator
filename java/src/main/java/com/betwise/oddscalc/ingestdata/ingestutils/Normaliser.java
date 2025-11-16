@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Helper class to normalise input for equal comparison, whilst keeping it presentable (i.e. title case)
+ */
+
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.VenueKey;
@@ -6,10 +11,12 @@ public final class Normaliser {
     private Normaliser() {
     }
 
+    // wrapper to normalise both fields in a venue key
     public static VenueKey normaliseVenueKey(VenueKey venueKey) {
         return new VenueKey(normalise(venueKey.groundName()), normalise(venueKey.city()));
     }
 
+    // returns the input with punctuation removed, spaces normalised, and words title-cased.
     public static String normalise(String input) {
         if (input == null) {
             return "";

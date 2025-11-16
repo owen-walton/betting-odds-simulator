@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Helper class for making HTTP get requests when given a URL
+ */
+
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import java.io.IOException;

@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Helper class for reading files, currently only needed for zip files
+ */
+
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import java.io.*;
@@ -7,6 +12,8 @@ import java.util.zip.*;
 
 public final class FileReadHelper {
 
+    // reads a singular file from inside a zip, given the location of the zip file and the file's name
+    // returns a List<String>, where each String is a line in the file
     public static List<String> readZipFromResources(String zipPathInResources, String fileInZip) {
         List<String> lines = new ArrayList<>();
 
@@ -39,10 +46,12 @@ public final class FileReadHelper {
         return lines;
     }
 
-    public static Map<String, List<String>> readZipFilesFromResources(String zipPathInResources, Set<String> filesInZip) {
-        return readZipFilesFromResources(zipPathInResources, filesInZip, "");
-    }
-
+    // like readZipFromResources, but instead used when multiple files from the same zip are to be read instead of one
+    // it returns a map "FileName -> Contents" where contents is a List<String> of lines from the file
+    //
+    // this is used instead of iterating through the single version of this method
+    // because opening and closing a zip file is an expensive process
+    // so this method stays in the zip until required files are read
     public static Map<String, List<String>> readZipFilesFromResources(String zipPathInResources, Set<String> filesInZip, String fileExtension) {
         Map<String, List<String>> fileContents = new HashMap<>();
 
