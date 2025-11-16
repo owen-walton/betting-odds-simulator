@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
+public class VenueDAO implements WriteDAO<Venue>, OneToManyMatches<Venue>, AutoCloseable {
 
     private DBConnection dbConnection;
 
@@ -25,7 +25,8 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
         }
     }
 
-    public Set<Venue> getAllVenues() {
+    @Override
+    public Set<Venue> getAll() {
         String sql = "SELECT VenueID, GroundName, City FROM Venue";
         Set<Venue> venues = new HashSet<>();
 
@@ -50,6 +51,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
     // takes in a list of Venue objects with filler/unassigned ids, e.g. -1
     // Uses the natural key of the object (groundName, city) to find the true ids from the db
     // Then build a new list of the correct Venue objects
+    @Override
     public List<Venue> getIDsIntoObjects(List<Venue> venues) {
         List<Venue> newList = new ArrayList<>();
         if (venues.isEmpty()) return newList;
@@ -108,6 +110,7 @@ public class VenueDAO implements WriteDAO<Venue>, AutoCloseable {
     // receives a list of Venue objects and remove all duplicates (keep first one then remove rest),
     // then for the Venues still in list, search db (by natural key) for each one,
     // if not found add it to a new list then return the new list
+    @Override
     public List<Venue> removeExisting(List<Venue> venues) {
         if (venues.isEmpty()) {
             return new ArrayList<>();

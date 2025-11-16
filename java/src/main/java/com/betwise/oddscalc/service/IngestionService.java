@@ -63,7 +63,12 @@ public class IngestionService {
         ){
             System.out.println("Initialising client");
             // give client team names from DB so it can only do international matches without having to talk to DB layer
-            CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), teamDAO.getAllTeamNames());
+            Set<Team> teamSet = teamDAO.getAll();
+            Set<String> teamNames = new HashSet<>();
+            for (Team t : teamSet) {
+                teamNames.add(t.getName());
+            }
+            CricAPIClient cricAPIClient = new CricAPIClient(new HTTPClient(), teamNames);
 
             System.out.println("Beginning parse");
             // create a temporary schema object to store the matches parsed
@@ -126,7 +131,7 @@ public class IngestionService {
                 schema.updateTeamKey(team);
             }
 
-            Set<Venue> canonicalVenues = venueDAO.getAllVenues();
+            Set<Venue> canonicalVenues = venueDAO.getAll();
             Map<VenueKey, Venue> schemaKeyToCanonicalVenue = new HashMap<>();
             for (Venue v : schema.getVenues()) {
 

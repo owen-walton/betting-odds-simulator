@@ -14,7 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
 
-public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
+public class TeamDAO implements WriteDAO<Team>, OneToManyMatches<Team>, AutoCloseable {
 
     private DBConnection dbConnection;
 
@@ -30,6 +30,7 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
     // takes in a list of Team objects with filler/unassigned ids, e.g. -1
     // Uses the natural key of the object (name) to find the true ids from the db
     // Then build a new list of the correct Team objects
+    @Override
     public List<Team> getIDsIntoObjects(List<Team> teams) {
         List<Team> newList = new ArrayList<>();
 
@@ -72,22 +73,23 @@ public class TeamDAO implements WriteDAO<Team>, AutoCloseable {
         }
     }
 
-    public Set<String> getAllTeamNames() {
-        Set<String> names = new HashSet<>();
-        String sql = "SELECT Name FROM Team";
+    @Override
+    public Set<Team> getAll() {
+        Set<Team> teams = new HashSet<>();
+        String sql = "SELECT TeamID, Name FROM Team";
 
         try (Connection conn = dbConnection.getConn();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                names.add(rs.getString("Name"));
+                teams.add(new Team(rs.getInt("TeamID"), rs.getString("Name")));
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to load all team names", e);
         }
 
-        return names;
+        return teams;
     }
 
     @Override
