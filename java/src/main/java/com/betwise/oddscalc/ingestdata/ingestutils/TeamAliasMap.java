@@ -1,3 +1,8 @@
+/**
+ * @author Owen Walton
+ * Some countries have multiple names across data sources so these cases are merged by this file's aliasCheck()
+ */
+
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import java.util.HashMap;
@@ -11,7 +16,7 @@ public class TeamAliasMap {
         buildMap();
     }
 
-    public void buildMap() {
+    private void buildMap() {
         teamAliasMap = new HashMap<>();
         teamAliasMap.put("Ivory Coast", "Côte Du0027ivoire");
         teamAliasMap.put("Czech Republic", "Czechia");

@@ -23,8 +23,11 @@ public final class Normaliser {
         }
 
         String result = input.trim();
+        // convert unicode apostrophe to normal apostrophe
         result = result.replaceAll("u0027", "'");
+        // convert HTML right-apostrophe to normal apostrophe
         result = result.replaceAll("&rsquo;", "'");
+        // replace hyphen with space so there are no hyphens but words aren't merged unwantedly
         result = result.replaceAll("-", " ");
 
         // remove punctuation
