@@ -1,7 +1,9 @@
 /**
- * Class was bugged and the fix was un-findable so canonical venues map and main flow is unused
- * only comparison methods e.g isSameVenue() are used
+ * @author Owen Walton
+ * Stores the rules and logic behind determining if 2 venues named differently are the same place
+ * This is necessary due to inconsistencies across the data sources
  */
+
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
 import com.betwise.oddscalc.entity.VenueKey;
@@ -9,9 +11,6 @@ import com.betwise.oddscalc.entity.VenueKey;
 import java.util.HashMap;
 import java.util.Map;
 
-// class is made closeable as it is designed to only be used once per bulk insert
-// this means the -1 ids in canonical map don't require updating after the insert
-// and the recreation of the instance is not memory expensive because it is for bulk insert not single insert
 public class VenueDeduplicator implements AutoCloseable {
     private boolean isClosed;
     private Map<String, String> groundAliasMap;
@@ -22,47 +21,15 @@ public class VenueDeduplicator implements AutoCloseable {
         createAliasMaps();
     }
 
-    // handles all the deduplication rules/logic (anything that relies on other Venue entries determine)
-    // if it is a unique venue return -1 and put in canonical map with a new VenueEditState(-1, true)
-    // otherwise return the trueID of the duplicate
-    // and if new venue takes priority over the existing one, use editCanonicalMap() to change VenueKey but keep ID
-    // Boolean value of true represents that the details of the venue have been changed and vice versa
-    /*public int findAndUpdateDuplicateEntry(Venue venue) {
-        VenueKey newKey = venue.getVenueKey();
-        VenueKey matchKey = null;
-        VenueEditState matchState = null;
-
-        String groundName = newKey.groundName();
-        String city = newKey.city();
-
-        // find the best matching venue in canonical list
-        // (if no valid matches then existingMatchKey and existingMatchState = null)
-        for (Map.Entry<VenueKey, VenueEditState> entry : canonicalVenues.entrySet()) {
-            VenueKey existingKey = entry.getKey();
-            VenueEditState existingState = entry.getValue();
-
-            if (isSameVenue(groundName, city, existingKey.groundName(), existingKey.city())) {
-                matchKey = existingKey;
-                matchState = existingState;
-                break; // a venue being checked can only match 1 from the canonical list
-            }
-        }
-
-        // if no match, add new canonical entry and return -1
-        if (matchKey == null) {
-            canonicalVenues.put(newKey, new VenueEditState(-1, true));
-            return -1;
-        }
-
-        // if match found, decide if new venue takes priority
-        if (shouldReplace(newKey, matchKey)) {
-            // keep id, update key
-            editCanonicalVenue(matchState.getId(), newKey);
-        }
-
-        return matchState.getId();
-    }*/
-
+    // takes in a name,city and an existing name,city
+    // returns true if they are determined to be the same place, false if not
+    //
+    // RULES:
+    // normalise both venues and applies alias, strip generic words from ground name and normalise again for comparison
+    // if the cleaned names match exactly then same venue
+    // otherwise remove numeric suffixes (e.g. "ground2" → "ground"), if base names don't match then not same venue
+    // if base names match, if one has a numeric suffix and the other doesn't then not same venue,
+    // if both have numeric suffixes they must match
     public boolean isSameVenue(String name, String city, String exName, String exCity) {
         // Create VenueKey objects
         VenueKey key1 = aliasCheck(new VenueKey(name, city));
@@ -98,6 +65,16 @@ public class VenueDeduplicator implements AutoCloseable {
         return false;
     }
 
+    // takes in a new venue key and an old venue key
+    // returns true if the new entry should replace the old one, false if not
+    //
+    // RULES:
+    // apply alias rules to the new key, if alias changes it then prefer the new key
+    // apply alias rules to the old key, if alias changes old but not new then keep old
+    // prefer the entry with a non-empty city over one with an empty city
+    // prefer the name that includes a numeric suffix if the old one doesn't
+    // prefer the entry with the longer (more specific) city name
+    // otherwise do not replace
     public boolean shouldReplace(VenueKey newKey, VenueKey oldKey) {
         // Apply alias normalization
         VenueKey normNew = aliasCheck(newKey);
@@ -124,7 +101,7 @@ public class VenueDeduplicator implements AutoCloseable {
     }
 
     private String stripGroundName(String groundName) {
-        // don't add oval due to potential for false duplicates
+        // don't add "oval" due to potential for false duplicates
         final String[] GENERIC_WORDS = {"ground", "stadium", "sports", "international", "field", "park", "club",
                 "academy", "cricket", "school", "college", "institute", "university", "national", "state",
                 "recreation", "complex", "arena", "centre", "center", "the", "association"};
@@ -142,8 +119,8 @@ public class VenueDeduplicator implements AutoCloseable {
 
     private VenueKey normaliseForComparison(VenueKey key) {
         // punctuation, etc already removed before given to VenueDeduplicator
-        return new VenueKey(key.groundName().replaceAll("\\s+", "").toLowerCase(),
-                key.city().replaceAll("\\s+", "").toLowerCase());
+        return new VenueKey(normaliseForComparison(key.groundName()),
+                normaliseForComparison(key.city()));
     }
 
     private boolean hasNumericSuffix(String s) {
@@ -152,85 +129,6 @@ public class VenueDeduplicator implements AutoCloseable {
 
     private String nameWithoutNumericSuffix(String s) {
         return s.replaceAll("\\d+$", "");
-    }
-
-    /*
-    public Set<Venue> getEditedAndNewVenues() {
-        Set<Venue> changedVenues = new HashSet<>();
-        for (Map.Entry<VenueKey, VenueEditState> entry : getCanonicalVenues().entrySet()) {
-            if (entry.getValue().isEdited() || entry.getValue().getId() == -1) {
-                changedVenues.add(new Venue(entry.getValue().getId(), entry.getKey()));
-            }
-        }
-        return changedVenues;
-    }
-
-     * Return value of this function is a set of venues which contains:
-     * - The ground name and city used as a natural key in CricketMatchDataSchema
-     * - The true id in the db that relates to the natural key
-     * - natural key is not updated in accordance with the db because the return value is only used to replace the
-     *   foreign keys in CricketMatchDataSchema with true keys and no updating is then required as the Venue part
-     *   of the schema is then not used again
-     * - True id of unique venues cannot be retrieved as canonicalList not added to db yet so they have venueID of -1 so
-     *   service layer knows to call VenueDAO.getIDsIntoObjects() for those venues specifically once added to db
-     */
-    /*
-    public Set<Venue> updateCanonicalList(Set<Venue> venuesToAdd) {
-        Set<Venue> trueIDvenues = new HashSet<>();
-        for (Venue v : venuesToAdd) {
-            // apply alias map and detect if it changed
-            VenueKey originalKey = v.getVenueKey();
-            VenueKey aliasedKey = aliasCheck(originalKey);
-            boolean aliasChanged = !aliasedKey.equals(originalKey);
-            v.setVenueKey(aliasedKey);
-
-            int trueID = findAndUpdateDuplicateEntry(v);
-
-            // if it matched an existing row AND alias really changed, mark as edited
-            if (trueID != -1 && aliasChanged) {
-                canonicalVenues.put(
-                        aliasedKey,
-                        new VenueEditState(trueID, true)
-                );
-            }
-
-
-            // if the venue is not a duplicate anywhere add the venue to the canonical list and -1 trueID
-            if (trueID == -1) {
-                trueIDvenues.add(v); // + getIDsIntoObjects
-            } else {
-                // set trueID to the one from its duplicate counterpart
-                v.setVenueID(trueID);
-                trueIDvenues.add(v);
-            }
-        }
-        return trueIDvenues;
-    }
-
-    public Map<VenueKey, VenueEditState> getCanonicalVenues() {
-        return canonicalVenues;
-    }
-
-    public void editCanonicalVenue(int id, VenueKey newVenueKey) {
-        VenueKey oldVenueKey = null;
-        for (Map.Entry<VenueKey, VenueEditState> v : this.canonicalVenues.entrySet()) {
-            int currentID = v.getValue().getId();
-            if (currentID == id) {
-                oldVenueKey = v.getKey();
-                break;
-            }
-        }
-        if (oldVenueKey != null) {
-            this.canonicalVenues.remove(oldVenueKey);
-            this.canonicalVenues.put(newVenueKey, new VenueEditState(id, true));
-        }
-
-    }*/
-
-    public void checkClosed() {
-        if (isClosed) {
-            throw new RuntimeException("Venue duplicator is closed");
-        }
     }
 
     private void createAliasMaps() {
@@ -270,6 +168,8 @@ public class VenueDeduplicator implements AutoCloseable {
         cityAliasMap.put(alias.toLowerCase(), canonical);
     }
 
+    // returns an alias clean VenueKey object
+    // if wanting a true/false value you can do: vk.equals(aliasCheck(vk)), returns true if no alias, vice versa
     private VenueKey aliasCheck(VenueKey key) {
         String ground = groundAliasMap.getOrDefault(key.groundName().toLowerCase(), key.groundName());
         String city = cityAliasMap.getOrDefault(key.city().toLowerCase(), key.city());
