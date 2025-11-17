@@ -1,3 +1,14 @@
+/**
+ * @author Owen Walton
+ *
+ * Handles all parsing of local Cricsheet JSON data.
+ * This class reads the cricsheet.zip file from resources, extracts the required match JSON files,
+ * parses them using ParseJSON.java into nested maps, then manually converts them into the container objects
+ * ,
+ * The structure/output is intentionally made consistent with CricAPIClient so that
+ * IngestionService can process both sources identically.
+ */
+
 package com.betwise.oddscalc.ingestdata;
 
 
@@ -16,12 +27,14 @@ public class CricSheetParser {
     private final String JSON_EXTENSION = ".json";
     private final List<Venue> venueList = new ArrayList<>();
 
+    // parses a batch of matches based on matchIDs:
+    // reads all required JSON files from cricsheet.zip,
+    // parses each match individually,
+    // and merges the results into one CricketMatchDataSchema.
     // duplicates are handled later by DAOs not parser
     public CricketMatchDataSchema parseMatchesBatch(Set<String> matchIDs) {
         CricketMatchDataSchema internationalCricketData = new CricketMatchDataSchema();
 
-        double index = 0.0;
-        double size = matchIDs.size();
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
         for (String matchID : matchIDs) {
             internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons));
@@ -30,7 +43,12 @@ public class CricSheetParser {
         return internationalCricketData;
     }
 
-    public CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons) {
+    // parses a single match:
+    // joins the JSON file lines, parses JSON to a map using helper,
+    // verifies match format is official Test/T20/ODI (Cricsheet sometimes stores unofficial "4 day match", etc.),
+    // builds all container objects from parsed map and stores them in a CricketMatchDataSchema container.
+    // If a match is unofficial or missing required fields, an empty schema is returned.
+    private CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons) {
 
         Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(joinStringList(allMatchJsons.get(matchID)), Set.of("innings", "meta"));
 
@@ -166,7 +184,8 @@ public class CricSheetParser {
         return tempSchema;
     }
 
-    public String joinStringList(List<String> list) {
+    // helper to join a list of strings in order into one string
+    private String joinStringList(List<String> list) {
         StringBuilder joinedStr = new StringBuilder();
 
         for (String str : list) {
@@ -179,6 +198,8 @@ public class CricSheetParser {
     // whilst each json match file has a match_type field for 'international' or 'club',
     // this would require the reading and decompression of every single json file despite only some being used/stored
     // which is expensive, instead the readme is used to find all ids of files that require reading from
+    // method reads in the readme from the zip using FileReadHelper class, then gets all ids that say 'international'
+    // this also allows IngestionService.java to batch the ingestion
     public List<String> getInternationalMatchIDs() {
         boolean startReading = false;
         List<String> readmeText = FileReadHelper.readZipFromResources(CRICSHEET_PATH, README_NAME);
