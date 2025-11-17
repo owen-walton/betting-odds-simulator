@@ -1,9 +1,18 @@
+"""
+Provides an evaluation function (scored by log loss so lower is better) for:
+the model when given a set of Tuning Params; the standard ELO formula; and a random 50/50 prediction
+The model evaluate is used within the Bayesian Optimisation, all 3 evaluates are used in the test
+"""
+
 import math
 from model.match import Match, MarginType
 from model.params import TuningParams
 from typing import List, Dict, Tuple
 
 def evaluate(params: TuningParams, matches: List[Match]) -> Tuple[float, Dict[int, float]]:
+    """
+    Evaluate the model given a set of Tuning Params.
+    """
     team_ratings = {}  # team_id -> current ELO
     negative_log_loss = 0.0
     num_matches = 0
@@ -76,7 +85,7 @@ def predict(
     team2_id: int = None,
 ) -> float:
     """
-    Predict win probability for team1 given both teams' ELOs and match conditions.
+    Predict win probability for team1 given both teams' ELOs, the match conditions and a model.
     Returns a probability (0.0–1.0) that team1 wins.
     """
 
@@ -98,9 +107,9 @@ def predict(
 
 def calculate_win_prob(team_elo: float, opposition_elo: float, params: TuningParams) -> float:
     """
-    Calculate probability team referenced by team_elo (not opposition_elo) wins the game.
+    Calculate the probability that the team referenced by team_elo (not opposition_elo) wins the game.
     Doesn't account for draws
-    based on ELO ratings and TuningParams.
+    Calculation is based on ELO ratings and TuningParams.
     ELOs must be pre tuned before this function is called.
     """
     diff = team_elo - opposition_elo

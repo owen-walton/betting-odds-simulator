@@ -60,7 +60,7 @@ def get_team_id_by_name(team_name: str) -> int:
     """
     Fetch the TeamID for a given team name from the Teams table.
 
-    team_name - full or exact team name (e.g. "India", "Australia")
+    team_name - full/exact team name (e.g. "India", "Australia")
     Returns:
         integer TeamID if found, otherwise raises ValueError,
         meaning the program fast fails, so no logical errors are carried forward to the db

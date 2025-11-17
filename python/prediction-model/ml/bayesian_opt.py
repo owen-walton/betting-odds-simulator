@@ -5,7 +5,6 @@ from model.params import TuningParams
 from model.match  import Match
 from ml.objective_function import evaluate
 
-
 def optimise_params(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
@@ -14,7 +13,6 @@ def optimise_params(
     random_state: Optional[int] = None
 ) -> Tuple[TuningParams, float]:
     """
-    TODO May need batching in future
     searchBounds: (minParams, maxParams)
     matches: matches data
     init_points: number of random explorations before bayesia opt begins
@@ -36,7 +34,7 @@ def optimise_params(
         "one_innings_margin_bonus": (min_params.one_innings_margin_bonus, max_params.one_innings_margin_bonus)
     }
 
-    # wrap evaluate() so that a higher score is better (as required by bayes opt library)
+    # wrap evaluate() with a negated output so that a higher score is better (as required by bayes opt library)
     def bayes_evaluate(**kwargs) -> float:
         tp = TuningParams(**kwargs)
         score, _ = evaluate(tp, matches)
