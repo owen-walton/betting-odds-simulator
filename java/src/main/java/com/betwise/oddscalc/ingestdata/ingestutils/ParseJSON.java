@@ -1,8 +1,11 @@
 /**
  * @author Owen Walton
+ * Helper class for handling and parsing json so the contents can be interpreted/ingested
+ * ,
  * Class relies on trusted input, incorrect json syntax will break and this is not currently handled safely
  * this is because all jsons required in program come from sources that are entrusted to follow syntax
- * ensureSyntax() will confirm the json syntax is correct before attempting to parse
+ * ,
+ * ensureSyntax() will confirm the json syntax is correct before attempting to parse, not currently implemented
  */
 package com.betwise.oddscalc.ingestdata.ingestutils;
 
@@ -19,7 +22,10 @@ public final class ParseJSON {
     }
 
     // returns null for an invalid key path
+    // unrelated to json parsing but a helper for accessing the desired field from a map returned by parseJsonToMap()
+    // takes a path in format "xxx/yyy/zzz", zzz is the key of the required value and xxx and yyy are its parent keys
     public static Object getValueFromMap(String keyPath, Map<String, Object> map) {
+
         // gets the value where the key follows the path provided
         Object current = map;
 
@@ -33,6 +39,13 @@ public final class ParseJSON {
         return current;
     }
 
+    /**
+     * parseJsonToMap():
+     * This method has three signatures:
+     * - two public wrappers for the private method, one for when there are ignored keys and one that parses all paths
+     * - the private method that handles all the logic, the private method needs to call itself in a recursive fashion,
+     *   the currentPath parameter is empty in the wrappers so that the method knows it is at the start of the parse
+     */
     public static Map<String, Object> parseJsonToMap(String jsonStr) {
         return parseJsonToMap(jsonStr, new HashSet<>(), "");
     }
@@ -41,6 +54,10 @@ public final class ParseJSON {
         return parseJsonToMap(jsonStr, ignoredKeyPaths, "");
     }
 
+    // recursively parse the JSON into a nested HashMap<String, Object>, (the object is likely to be an inner map)
+    // remove braces then for each "key -> object" at top level, calls parseObject()
+    // (object can be any data type incl primitive)
+    // skipping any paths in ignoredKeyPaths
     private static Map<String, Object> parseJsonToMap(String jsonStr, Set<String> ignoredKeyPaths, String currentPath) {
         Map<String, Object> jsonMap = new HashMap<>();
         boolean endOfString = false;
@@ -75,7 +92,8 @@ public final class ParseJSON {
         return jsonMap;
     }
 
-    // wrapper of getValueEndIndex to allow end index to be found when a key is present
+    // wrapper of getValueEndIndex used when a key is present in order to remove key
+    // i.e. "obj":{"x":1, "y":3}, ... will give getValueEndIndex() {"x":1, "y":3}, ...
     private static int getObjectEndIndex(String json, int startIndex) {
 
         if (startIndex < json.length()) {
@@ -85,12 +103,18 @@ public final class ParseJSON {
                 int colonIndex = findNextNonEscapedIndex(json, startIndex, ':');
                 int startOfObjectValue = colonIndex + 1;
 
+                // startOfObjectValue in the json refers to the { that opens an object, then getValueEndIndex finds }
                 return getValueEndIndex(json, startOfObjectValue);
             }
         }
         return -1;
     }
 
+    // a value can either be:
+    // an object "key":{...}, an array "key":[...], a string "key":"...", or primitive value "key":123
+    // this method takes in a string and the index of the start of the value
+    // (not including "key:", there is a wrapper for this)
+    // it will return the index of the end of the object i.e. index of corresponding '}' to '{'
     private static int getValueEndIndex(String jsonStr, int startIndex) {
         switch (jsonStr.charAt(startIndex)) {
             case '"' -> {
@@ -150,6 +174,7 @@ public final class ParseJSON {
         return objectMap;
     }
 
+    // return the key (without quotes) of the string given in form "key":...
     private static String parseKey(String jsonObjectStr) {
         // start at index 1 to avoid function finding the first quote mark
         int outerQuoteMarkIndex = findNextNonEscapedIndex(jsonObjectStr, 1, '"');
@@ -159,6 +184,8 @@ public final class ParseJSON {
 
     // requires a string beginning with the value not key (remove key and colon from start)
     // however can have more data on end
+    // converts a json value to the corresponding java value by identifying json type then calling correct helper
+    // if an inner object is found, parseJsonToMap is recursively called despite currently being inside it
     private static Object parseValue(String jsonValueStr, Set<String> ignoredKeyPaths, String currentPath) {
         Object value;
         switch (jsonValueStr.charAt(0)) {
@@ -181,12 +208,14 @@ public final class ParseJSON {
         return value;
     }
 
-    // array parsing uses parseValue but doesn't require key path ignoring so it may call this wrapper
+    // array parsing method may call this wrapper because it doesn't require key path ignoring
     private static Object parseValue(String jsonValueStr) {
         return parseValue(jsonValueStr, new HashSet<>(), "");
     }
 
-
+    // counts decimal points, exponent markers and dashes so that number ends correctly
+    // stops reading when a non-number character is hit
+    // returns integer, long, or double depending on what the string contains
     private static Object parseNumber(String json, int startIndex) {
         int decimalCount = 0;
         int eCount = 0;
@@ -230,6 +259,9 @@ public final class ParseJSON {
         }
     }
 
+    // takes in a shortened array string in form [xx,yy,zz]
+    // iterates through values, recursively calling parseValue() on each one e.g xx,
+    // this supports any data type inside each array field
     private static Object parseJsonArr(String jsonArrStr) {
 
         List<Object> arrayList = new ArrayList<>();
@@ -249,6 +281,10 @@ public final class ParseJSON {
         return arrayList;
     }
 
+    // takes in char value, then looks for the next index of that value including and after the start index
+    // -1 mean value doesn't appear again
+    // if the char is inside a quote it isn't counted,
+    // so in order to know if inside quotes, the function must assume it is not inside an open quote before start index
     private static int findNextNonEscapedIndex(String str, int startIndex, char value) {
         boolean inQuotes = false; // function assumes not already in quotes (start index must not be in quotes)
 
@@ -266,6 +302,8 @@ public final class ParseJSON {
         return -1;
     }
 
+    // helper method to see if a char is escaped by \,
+    // however \\, doesn't escape the comma, only a \ so there must be an odd number of \
     private static boolean isEscaped(String str, int index) {
 
         int numOfEscapes = 0;
@@ -279,10 +317,13 @@ public final class ParseJSON {
         return numOfEscapes % 2 == 1;
     }
 
+    // wrapper to get the enclosed string instead of just the index the bracket closes
     private static String findBracketEnclosedString(String str, int startIndex, char close) {
         return str.substring(startIndex + 1, findCloseBracket(str, startIndex, close));
     }
 
+    // finds the value at start index, setting that to char open, then find the corresponding close bracket
+    // if another open is found then 2 closes are needed, etc
     private static int findCloseBracket(String str, int startIndex, char close) {
         char open = str.charAt(startIndex);
         int openStatements = 0;
@@ -306,6 +347,7 @@ public final class ParseJSON {
         return str.substring(1, str.length() - 1);
     }
 
+    // doesn't remove white space from inside quotes
     // will not work on half of a string if a quote is missing from first half (only use on full strings)
     private static String removeWhiteSpace(String str) {
         boolean inQuotes = false;
