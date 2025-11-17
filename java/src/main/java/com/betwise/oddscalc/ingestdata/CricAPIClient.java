@@ -1,10 +1,20 @@
+/**
+ * @author Owen Walton
+ * Handles all CricAPI-specific (now Cricketdata.org) processing,
+ * this class will use HTTPClient.java helper to get a json string from the web API,
+ * then uses ParseJSON.java to convert it into a nested map for easier access,
+ * then manually populates the relevant container objects based on what is known about the data format given
+ * ,
+ * The container objects are then passed to IngestionService to be handled,
+ * this allows the output of this class and CricSheetParser.java to be the same so IngestionService can work generally
+ */
+
 package com.betwise.oddscalc.ingestdata;
 
 import com.betwise.oddscalc.entity.*;
 import com.betwise.oddscalc.ingestdata.ingestutils.HTTPClient;
 import com.betwise.oddscalc.ingestdata.ingestutils.ParseJSON;
 import com.betwise.oddscalc.ingestdata.ingestutils.Normaliser;
-import com.betwise.oddscalc.ingestdata.ingestutils.TeamAliasMap;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +31,14 @@ public class CricAPIClient {
     public CricAPIClient(HTTPClient httpClient, Set<String> countries) {
         this.httpClient = httpClient;
         this.apiKey = extractApiKey();
+        // the loadInternationalCountries() is expensive on API hits so should only be run where necessary,
+        // hence, if client is being used for another purpose (not getting countries) and needs getCountries privately,
+        // then it should use a country list supplied to the client from the database
         this.countries = countries;
     }
 
-    public String extractApiKey() {
+    // get the api key from the resources folder
+    private String extractApiKey() {
         Properties cricapiProps = new Properties();
         try (InputStream input = getClass().getClassLoader()
                 .getResourceAsStream("cricapi/cricapi.properties")) {
@@ -34,26 +48,26 @@ public class CricAPIClient {
             }
 
             cricapiProps.load(input);
+            // if API hits run out, 2 more keys are present in cricapi.properties
             return cricapiProps.getProperty("apikey");
+            // return cricapiProps.getProperty("apikey2");
+            // return cricapiProps.getProperty("apikey3");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // not enough data from initial get, matchID is field of interest
-    public String getMatchListJson(int offset) throws IOException {
-        String url = String.format("%s/matches?apikey=%s&offset=%d", BASE_URL, apiKey, offset);
-        return httpClient.get(url);
-    }
-
+    // returns a list of all country names provided by CricAPI
+    // not all returned at one go by the get request so must page through (if offset = 20, send from country 20 onwards)
+    // this is the only API hit-expensive function, but is only required to run on initialisation of the program
     @SuppressWarnings("unchecked")
     public Set<String> loadInternationalCountries() throws IOException {
         Set<String> countries = new HashSet<>();
         int offset = 0;
 
         while (true) {
-            // page through /countries by offset
+            // page through countries by offset
             String url = String.format(
                     "%s/countries?apikey=%s&offset=%d",
                     BASE_URL, apiKey, offset
@@ -76,72 +90,17 @@ public class CricAPIClient {
                 }
             }
 
-            // advance offset by number of records returned
+            // increment offset by number of records returned
             offset += data.size();
         }
 
         return countries;
     }
 
-    public Set<String> getCountries() {
-        return countries;
-    }
-
-    public void setCountries(Set<String> countries) {
-        this.countries = countries;
-    }
-
-    // Returns every matchID whose status == "Completed",
-    // both teams are in the international country list,
-    // and neither team name contains "Women".
-    // match is not before fromDate
-    /*@SuppressWarnings("unchecked")
-    public Set<String> getCompletedMatchIds(LocalDate fromDate) throws IOException {
-        Set<String> ids = new HashSet<>();
-        Set<String> countries = loadInternationalCountries();
-        int offset = 0;
-
-        while (true) {
-            String json = getMatchListJson(offset);
-            Map<String, Object> root = ParseJSON.parseJsonToMap(json);
-            List<Map<String, Object>> data = (List<Map<String, Object>>) root.get("data");
-            if (data == null || data.isEmpty()) break;
-
-            for (Map<String, Object> m : data) {
-                String dateStr = Objects.toString(m.get("dateTimeGMT"), Objects.toString(m.get("date")));
-                if (dateStr.length() < 10) {
-                    continue;  // no valid date
-                }
-                LocalDate matchDate = LocalDate.parse(dateStr.substring(0, 10));
-                if (matchDate.isBefore(fromDate)) {
-                    continue;
-                }
-
-                String status = Objects.toString(m.get("status"), "");
-                if (!"Completed".equalsIgnoreCase(status)) continue;
-
-                String team1 = Objects.toString(m.get("team-1"), "");
-                String team2 = Objects.toString(m.get("team-2"), "");
-
-                // filter out any "Women" team or non-international side
-                if (team1.toLowerCase().contains("women")
-                        || team2.toLowerCase().contains("women")
-                        || !countries.contains(team1)
-                        || !countries.contains(team2)) {
-                    continue;
-                }
-                ids.add((String) m.get("id"));
-            }
-            offset += data.size();
-        }
-        return ids;
-    }*/
-
-
-    // get “Last 7 Days matches + Next 7 Days + Live” from cricScore
-    // then returns only those played in the past 7 days.
+    // get “Last 7 Days matches + Next 7 Days + Live” from cricScore section of CricAPI
+    // then filter so only matches that are mens AND international AND finished are identified, returning a set of their ids
     @SuppressWarnings("unchecked")
-    public Set<String> getMatchIDsWithinLast7DaysFrom(LocalDate fromDateIncl) throws IOException {
+    private Set<String> getMatchIDsWithinLast7DaysFrom(LocalDate fromDateIncl) throws IOException {
         // hit the eCricScore API
         String url = String.format("%s/cricScore?apikey=%s", BASE_URL, apiKey);
         String json = httpClient.get(url);
@@ -196,12 +155,13 @@ public class CricAPIClient {
         return ids;
     }
 
-    // fetches the detailed match info by matchID
-    public String getMatchDetailsJson(String matchID) throws IOException {
+    // fetches the detailed match info for one match by matchID
+    private String getMatchDetailsJson(String matchID) throws IOException {
         String url = String.format("%s/match_info?apikey=%s&id=%s", BASE_URL, apiKey, matchID);
         return httpClient.get(url);
     }
 
+    // call parseSingleMatch on every international id, then join all the return values into one schema
     public CricketMatchDataSchema parseAllMatchesWithin7DaysSince(LocalDate fromDate) throws IOException {
         // add all matchIDs of finished matches after fromDate
         System.out.println("Getting match ids");
@@ -216,7 +176,11 @@ public class CricAPIClient {
         return schema;
     }
 
-    public CricketMatchDataSchema parseSingleMatch(String matchID, LocalDate fromDate) throws IOException {
+    // for a single match: take in match id, get the json, parse the json with the ParseJSON helper class,
+    // then populate all container objects, add them to one CricketMatchDataSchema container and return it.
+    // Also take in a fromDate and if match is before that date don't parse it,
+    // returning an empty object means the match is skipped
+    private CricketMatchDataSchema parseSingleMatch(String matchID, LocalDate fromDate) throws IOException {
         // get json
         String matchJson = getMatchDetailsJson(matchID);
 
@@ -375,5 +339,9 @@ public class CricAPIClient {
                 List.of(match),
                 matchTeams
         );
+    }
+
+    private Set<String> getCountries() {
+        return countries;
     }
 }
