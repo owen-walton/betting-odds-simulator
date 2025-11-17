@@ -1,3 +1,9 @@
+"""
+Imports connection.py's get_conn to establish db connection,
+
+Reads data from the Team table, and both read and writes to TeamFormatELO table
+"""
+
 from typing import Dict
 from db.connection import get_conn
 
@@ -55,7 +61,9 @@ def get_team_id_by_name(team_name: str) -> int:
     Fetch the TeamID for a given team name from the Teams table.
 
     team_name - full or exact team name (e.g. "India", "Australia")
-    Returns: integer TeamID if found, otherwise raises ValueError
+    Returns:
+        integer TeamID if found, otherwise raises ValueError,
+        meaning the program fast fails, so no logical errors are carried forward to the db
     """
     conn = get_conn()
     cursor = conn.cursor(dictionary=True)

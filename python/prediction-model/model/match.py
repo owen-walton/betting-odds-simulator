@@ -1,3 +1,8 @@
+"""
+Match is a container class that only contains relevant information towards the outcome of a singular match,
+it doesn't mirror a db table like most other container objects.
+"""
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional

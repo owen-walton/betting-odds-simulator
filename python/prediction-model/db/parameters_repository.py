@@ -1,3 +1,8 @@
+"""
+Imports connection.py's get_conn to establish db connection,
+then runs a SELECT query to populate a TuningParams class instances OR runs an INSERT to update the params in db.
+"""
+
 from datetime import datetime, timezone
 from typing import Dict
 from model.params import TuningParams
@@ -8,7 +13,7 @@ def insert_tuning_params(params_by_format: Dict[str, TuningParams]):
     Each key in params_by_format is a format name ("Test", "ODI", "T20") mapping
     to a TuningParams instance.
 
-    All formats have the same CreatedAt timestamp
+    All formats have the same CreatedAt timestamp (instead of being seconds off as it inserts)
     TuningID is manually assigned as 1 + MAX(TuningID) in the table.
     """
     conn = get_conn()

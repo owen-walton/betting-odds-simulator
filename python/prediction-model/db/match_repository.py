@@ -1,6 +1,10 @@
+"""
+Imports connection.py's get_conn to establish db connection,
+then runs a JOIN query to populate a list of Match class instances.
+"""
+
 from datetime import date
 from typing import List, Dict
-import mysql.connector
 from db.connection import get_conn
 from model.match import Match, DataSource, MarginType
 

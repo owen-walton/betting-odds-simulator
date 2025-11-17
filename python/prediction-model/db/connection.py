@@ -1,3 +1,6 @@
+"""
+Connects the program to the database and returns the connection
+"""
 import mysql.connector
 from mysql.connector import MySQLConnection
 

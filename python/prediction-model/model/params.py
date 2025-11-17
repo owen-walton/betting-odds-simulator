@@ -1,14 +1,14 @@
+"""
+Container class that mirrors TunedParameters database table
+Stores a combination of parameters potentially used as the prediction model
+"""
+
 from dataclasses import dataclass
 from typing import Optional
 
 
 @dataclass
 class TuningParams:
-    """
-    Stores naive values that will be used for optimizing against
-    https://www.reddit.com/r/Cricket/comments/1hddsht/an_updated_elo_rating_system_for_test_cricket/
-    Link above suggests 25 is a strong naive value for K; will require tuning based on starting ELO etc.
-    """
     e_value: float
     k_factor: float
     home_adv: float

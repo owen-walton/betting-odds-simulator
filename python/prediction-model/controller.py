@@ -1,3 +1,7 @@
+"""
+Each function in controller class represents a branch of the program, menus in main determine which to run
+"""
+
 from ml.bayesian_opt import *
 from ml.objective_function import *
 from db.parameters_repository import *

@@ -1,10 +1,16 @@
+"""
+Class containing input helper methods that are used in the main
+"""
+
 from datetime import date
 
 class InputHelper:
     def input_letter_multiple_choice(self, num_of_options: int, prompt: str) -> str:
         """
-        Prompts the user for a single-letter multiple-choice answer.
-        Accepts letters 'A'...'Z' based on num_of_options.
+        Allows user to input a string prompt that will have an A,B,C,... menu, and the corresponding number of options
+        The input can be either upper or lower case but must be a valid letter (2 options means only A and B accepted)
+        Null safe
+        Returns the upper case version of the letter they entered
         """
         while True:
             sz_out = input(prompt).strip()
@@ -20,8 +26,7 @@ class InputHelper:
 
     def input_string_or_nothing(self, prompt: str) -> str:
         """
-        Prompts the user for a string (can be empty) but disallows semicolons
-        to help prevent SQL injection risks.
+        Prompts the user for a string (can be empty) but disallows semicolons to help prevent SQL injection risks
         """
         while True:
             user_input = input(prompt)
@@ -32,7 +37,9 @@ class InputHelper:
                 print("Please enter a valid string (no semicolons).")
 
     def input_date(self, lower_bound_incl: date, upper_bound_incl: date, prompt: str) -> date:
-        """Prompts for a date and ensures it's within inclusive bounds."""
+        """
+        Prompts for a date and ensures it's within inclusive bounds.
+        """
         while True:
             print(prompt)
             print("Enter in the form: DD/MM/YYYY")

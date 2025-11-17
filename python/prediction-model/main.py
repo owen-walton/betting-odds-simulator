@@ -1,11 +1,12 @@
-from controller import *
-from input_helper import *
-
 """
 main.py is an entry point for the program and holds no logic
 Each method supplied by controller.py is a different run case:
 - tune(): updates the tuning model in the database
 """
+
+from controller import *
+from input_helper import *
+
 if __name__ == "__main__":
     controller = Controller()
     input_helper = InputHelper()
@@ -46,6 +47,7 @@ if __name__ == "__main__":
             print(f"{'Format':<10} | {'ELO Baseline':>15} | {'Random 50/50':>15} | {'Tuned Model':>15}")
             print("-" * 65)
 
+            # iterate over each match format and print its losses (elo, random, model)
             # all_formats = sorted(set(elo_loss.keys()) | set(rand_loss.keys()) | set(model_loss.keys()))
             all_formats = ["T20", "ODI", "Test"]
             for fmt in all_formats:
@@ -56,9 +58,12 @@ if __name__ == "__main__":
 
             print("-" * 65)
 
+            # calculate overall average loss for each rating system
             avg_elo = sum(elo_loss.values()) / len(elo_loss)
             avg_rand = sum(rand_loss.values()) / len(rand_loss)
             avg_model = sum(model_loss.values()) / len(model_loss)
+
+            # print the averages row
             print(f"{'AVERAGE':<10} | {avg_elo:>15.6f} | {avg_rand:>15.6f} | {avg_model:>15.6f}")
             print("==============================================================\n")
 
