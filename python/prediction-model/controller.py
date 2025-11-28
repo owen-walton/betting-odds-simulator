@@ -17,9 +17,13 @@ class Controller:
 
     MARKET_OVERROUND = 0.12
 
-    def tune(self, rand_state: Optional[int] = None) -> Tuple[Dict[str, TuningParams], Dict[str, float]]:
+    def tune(self, rand_state: Optional[int] = None, end_of_training_date: Optional[date] = None) -> Tuple[Dict[str, TuningParams], Dict[str, float]]:
         """
         Core tuning logic used by both official_tune() and test_tune().
+
+        If end_of_training_date is None, run the tune on entire set,
+        if it has a date, tune based on matches BEFORE that date and
+        then run log loss calculations based off of matches AFTER that date
 
         Returns:
             (params_by_format, log_loss_by_format)
@@ -27,7 +31,7 @@ class Controller:
         # search parameters
         min_params = TuningParams(
             e_value=200.0,
-            k_factor=1.0,
+            k_factor=0.1,
             home_adv=10.0,
             toss_adv=0.0,
             runs_win_margin=0.0,
@@ -40,8 +44,8 @@ class Controller:
             k_factor=40.0,
             home_adv=150.0,
             toss_adv=60.0,
-            runs_win_margin=2.0,
-            wickets_win_margin=3.0,
+            runs_win_margin=3.0,
+            wickets_win_margin=6.0,
             one_innings_margin_bonus=100.0
         )
 
@@ -53,11 +57,37 @@ class Controller:
 
         # Run tuning per format
         for match_format in formats:
-            matches = get_matches(date.min, date.max, match_format)
+            # if not required to train and test on separate matches
+            if end_of_training_date is None:
+                matches = get_matches(date.min, date.max, match_format)
+                best_params, best_log_loss = optimise_params(
+                    search_bounds=search_bounds,
+                    matches=matches,
+                    random_state=rand_state
+                )
+                params_by_format[match_format] = best_params
+                log_loss_by_format[match_format] = best_log_loss
 
-            best_params, best_log_loss = optimise_params(search_bounds=search_bounds, matches=matches, random_state=rand_state)
-            params_by_format[match_format] = best_params
-            log_loss_by_format[match_format] = best_log_loss
+            else:
+                # Training matches only
+                train_matches = get_matches(date.min, end_of_training_date, match_format)
+
+                best_params, _ = optimise_params(
+                    search_bounds=search_bounds,
+                    matches=train_matches,
+                    random_state=rand_state
+                )
+                params_by_format[match_format] = best_params
+
+                # Test matches (after end_of_training_date)
+                test_matches = get_matches(end_of_training_date, date.max, match_format)
+
+                if test_matches:
+                    test_loss, _ = evaluate(best_params, test_matches)
+                else:
+                    test_loss = float("nan")
+
+                log_loss_by_format[match_format] = test_loss
 
         return params_by_format, log_loss_by_format
 
@@ -80,7 +110,7 @@ class Controller:
         Runs tuning but does not write to DB.
         Returns a dictionary of log losses for each format.
         """
-        _, log_loss_by_format = self.tune(rand_state)
+        _, log_loss_by_format = self.tune(rand_state=rand_state)
         return log_loss_by_format
 
     def test_elo_avg_loss(self) -> Dict[str, float]:
@@ -149,6 +179,9 @@ class Controller:
             team1_id=team1_id,
             team2_id=team2_id
         )
+
+        print(f"{team1}: {win_prob * 100:.1f}%")
+        print(f"{team2}: {(1 - win_prob) * 100:.1f}%")
         return self.win_prob_to_fractional_odds(win_prob)
 
 

@@ -54,7 +54,16 @@ public class CricSheetParser {
 
         // other formats like IT20 and ODM are unofficial matches which are to be disregarded and not returned
         // this is done at start of method to save unnecessary computation if returning nothing
+        // also disregard women's matches
         String matchFormat = (String) ParseJSON.getValueFromMap("info/match_type", matchInfoMap);
+        String gender = (String) ParseJSON.getValueFromMap("info/gender", matchInfoMap);
+        String event = (String) ParseJSON.getValueFromMap("info/event/name", matchInfoMap);
+
+        if ((gender != null && (gender.equalsIgnoreCase("female") ||
+                gender.equalsIgnoreCase("women")))
+                || event != null && event.toLowerCase().contains("women")) {
+            return new CricketMatchDataSchema();
+        }
         if (matchFormat == null ||
                 (!matchFormat.equalsIgnoreCase("Test") &&
                 !matchFormat.equalsIgnoreCase("T20") &&

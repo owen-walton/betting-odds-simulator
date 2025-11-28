@@ -7,6 +7,8 @@ Each method supplied by controller.py is a different run case:
 from controller import *
 from input_helper import *
 
+from datetime import date, timedelta
+
 if __name__ == "__main__":
     controller = Controller()
     input_helper = InputHelper()
@@ -25,8 +27,9 @@ if __name__ == "__main__":
     ===== OWNER MENU =====
     What would you like to do?
     A) Update prediction model
-    B) Run test
-    C) Quit
+    B) Run test against bassline
+    C) Run test using training + testing set
+    D) Quit
     """)
 
         if owner_choice == "A":
@@ -67,8 +70,28 @@ if __name__ == "__main__":
             print(f"{'AVERAGE':<10} | {avg_elo:>15.6f} | {avg_rand:>15.6f} | {avg_model:>15.6f}")
             print("==============================================================\n")
 
-
         elif owner_choice == "C":
+            MIN_DATE = date(2011, 12, 19) # 10 years after first match so there is enough training data
+            MAX_DATE = date.today() - timedelta(days=365) # needs at least a year of matches for testing
+            end_date = input_helper.input_date(MIN_DATE, MAX_DATE, f"""
+            Please enter an end date for the training set (begins the testing).
+            Valid range: {MIN_DATE} to {MAX_DATE}.
+            """)
+            # returns a map of: format->log loss
+            _, loss = controller.tune(end_of_training_date=end_date)
+
+            # print the results stored in loss in a visual way
+            print("\n============= MODEL PERFORMANCE SUMMARY =============")
+            print("--- Evaluation metric: Log loss (lower is better) ---\n")
+            print(f"{'Format':<10} | {'Log Loss':>15}")
+            print("-" * 65)
+            all_formats = ["T20", "ODI", "Test"]
+            for fmt in all_formats:
+                fmt_loss = loss.get(fmt, float('nan'))
+                print(f"{fmt:<10} | {fmt_loss:>15.6f}")
+            print("-" * 65)
+
+        elif owner_choice == "D":
             print("\n-------Program terminated-------")
 
     # --- Customer Assistant Menu ---

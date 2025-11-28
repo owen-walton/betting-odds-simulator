@@ -58,3 +58,18 @@ class InputHelper:
 
             except ValueError:
                 print("The date you entered is invalid.")
+
+    def input_integer(self, min_val: int, max_val: int, prompt: str) -> int:
+        """
+        Prompts the user for an integer between min_val and max_val (inclusive).
+        Re-prompts until valid.
+        """
+        while True:
+            try:
+                value = int(input(prompt).strip())
+                if min_val <= value <= max_val:
+                    return value
+                else:
+                    print(f"Please enter a number between {min_val} and {max_val}.")
+            except ValueError:
+                print("Please enter a valid integer.")
