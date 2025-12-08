@@ -8,8 +8,8 @@ from ml.objective_function import evaluate
 def optimise_params(
     search_bounds: Tuple[TuningParams, TuningParams],
     matches: List[Match],
-    init_points: int = 12,
-    n_iter: int = 70,
+    init_points: int = 18,
+    n_iter: int = 110,
     random_state: Optional[int] = None
 ) -> Tuple[TuningParams, float]:
     """
@@ -44,7 +44,7 @@ def optimise_params(
     optimizer = BayesianOptimization(
         f=bayes_evaluate,
         pbounds=pbounds,
-        verbose=1,
+        verbose=0,
         random_state=random_state
     )
 
@@ -52,7 +52,6 @@ def optimise_params(
     optimizer.maximize(init_points=init_points, n_iter=n_iter)
 
     # return best parameters
-    print(optimizer.max["target"])
     best_log_loss = -optimizer.max["target"]
     best_params_dict = optimizer.max["params"]
     return TuningParams(**best_params_dict), best_log_loss
