@@ -105,12 +105,16 @@ class Controller:
 
         insert_tuning_params(params_by_format)
 
-    def test_tune(self, rand_state) -> Dict[str, float]:
+    def test_tune(self, rand_state=None) -> Dict[str, float]:
         """
         Runs tuning but does not write to DB.
         Returns a dictionary of log losses for each format.
         """
-        _, log_loss_by_format = self.tune(rand_state=rand_state)
+        if rand_state is None:
+            _, log_loss_by_format = self.tune()
+        else:
+            _, log_loss_by_format = self.tune(rand_state=rand_state)
+
         return log_loss_by_format
 
     def test_elo_avg_loss(self) -> Dict[str, float]:
