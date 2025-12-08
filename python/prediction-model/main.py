@@ -8,6 +8,7 @@ from controller import *
 from input_helper import *
 
 from datetime import date, timedelta
+import time
 
 if __name__ == "__main__":
     controller = Controller()
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     ===== OWNER MENU =====
     What would you like to do?
     A) Update prediction model
-    B) Run test against bassline
+    B) Run test against baseline
     C) Run test using training + testing set
     D) Quit
     """)
@@ -38,12 +39,13 @@ if __name__ == "__main__":
             print("\n-------Prediction model updated-------")
 
         elif owner_choice == "B":
+            before = time.perf_counter()
             print("Running test against ELO formula (control test)")
             elo_loss = controller.test_elo_avg_loss()
             print("Running test with random guessing (control test)")
             rand_loss = controller.test_rand_avg_loss()
             print("Running test against the Main Prediction Model")
-            model_loss = controller.test_tune(2)
+            model_loss = controller.test_tune()
 
             print("\n================= MODEL PERFORMANCE SUMMARY =================")
             print("------- Evaluation metric: Log loss (lower is better) -------\n")
@@ -70,6 +72,13 @@ if __name__ == "__main__":
             print(f"{'AVERAGE':<10} | {avg_elo:>15.6f} | {avg_rand:>15.6f} | {avg_model:>15.6f}")
             print("==============================================================\n")
 
+            after = time.perf_counter()
+            time = after - before
+            minutes = int(time // 60)
+            seconds = time % 60
+            print(f"Time elapsed: {minutes}min {seconds:.2f}s")
+
+
         elif owner_choice == "C":
             MIN_DATE = date(2011, 12, 19) # 10 years after first match so there is enough training data
             MAX_DATE = date.today() - timedelta(days=365) # needs at least a year of matches for testing
@@ -85,7 +94,7 @@ if __name__ == "__main__":
             print("--- Evaluation metric: Log loss (lower is better) ---\n")
             print(f"{'Format':<10} | {'Log Loss':>15}")
             print("-" * 65)
-            all_formats = ["T20", "ODI", "Test"]
+            all_formats = ["Test"]
             for fmt in all_formats:
                 fmt_loss = loss.get(fmt, float('nan'))
                 print(f"{fmt:<10} | {fmt_loss:>15.6f}")
