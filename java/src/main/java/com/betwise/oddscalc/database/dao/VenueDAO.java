@@ -71,8 +71,13 @@ public class VenueDAO implements WriteDAO<Venue>, OneToManyMatches<Venue>, AutoC
 
             for (Venue input : venues) {
                 for (Venue dbVenue : dbVenues) {
-                    if (input.getGroundName().equals(dbVenue.getGroundName()) &&
-                            input.getCity().equals(dbVenue.getCity())) {
+                    if (
+                            input.getGroundName()
+                                    .equals(dbVenue.getGroundName())
+                            &&
+                            input.getCity()
+                                    .equals(dbVenue.getCity())
+                    ) {
                         Venue matched = new Venue();
                         matched.setVenueID(dbVenue.getVenueID());
                         matched.setGroundName(input.getGroundName());

@@ -27,9 +27,9 @@ public class CricketMatch {
         this.venueNaturalKey = venueNaturalKey;
     }
 
-    //============================================================================
+    //============================
     // Getters and Setters
-    //============================================================================
+    //============================
     public String getMatchID() {
         return matchID;
     }
@@ -78,9 +78,9 @@ public class CricketMatch {
         this.venueNaturalKey = venueNaturalKey;
     }
 
-    //============================================================================
+    //====================================
     // toString
-    //============================================================================
+    //====================================
     @Override
     public String toString() {
         return "CricketMatch{" +

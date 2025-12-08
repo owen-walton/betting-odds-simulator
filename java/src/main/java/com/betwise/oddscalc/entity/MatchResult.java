@@ -47,9 +47,9 @@ public class MatchResult {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
-    //============================================================================
+    //==============================
     // Getters and Setters
-    //============================================================================
+    //==============================
     public String getMatchID() {
         return matchID;
     }
@@ -130,9 +130,9 @@ public class MatchResult {
         this.tossWinningTeamNaturalKey = tossWinningTeamNaturalKey;
     }
 
-    //============================================================================
+    //=======================
     // toString
-    //============================================================================
+    //=======================
     @Override
     public String toString() {
         return "MatchResult{" +

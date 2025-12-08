@@ -27,7 +27,11 @@ public class DBConnection {
     private void loadProperties() {
         Properties dbConfig = new Properties();
 
-        try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+        try (
+                InputStream input = DBConnection.class
+                .getClassLoader()
+                .getResourceAsStream(PROPERTIES_FILE)
+        ) {
             if (input == null) {
                 throw new RuntimeException("DBConfig.properties not found in classpath");
             }

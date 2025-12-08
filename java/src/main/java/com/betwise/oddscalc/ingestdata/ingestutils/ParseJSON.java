@@ -164,7 +164,9 @@ public final class ParseJSON {
         }
 
         // shorten string to not include the key or colon at beginning
-        jsonObjectStr = jsonObjectStr.substring(findNextNonEscapedIndex(jsonObjectStr, 0, ':') + 1);
+        jsonObjectStr = jsonObjectStr.substring(
+                findNextNonEscapedIndex(jsonObjectStr, 0, ':') + 1
+        );
 
         // now parse the value(s) of object
         value = parseValue(jsonObjectStr, ignoredKeyPaths, fullPath);

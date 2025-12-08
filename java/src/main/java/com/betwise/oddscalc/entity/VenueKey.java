@@ -22,7 +22,6 @@ public record VenueKey(String groundName, String city) {
 
     @Override
     public int hashCode() {
-        // Follows the standard recipe: combine field hashes
         return Objects.hash(groundName, city);
     }
 }

@@ -19,8 +19,12 @@ public final class FileReadHelper {
 
         try (
                 // find zip
-                InputStream inputStream = FileReadHelper.class.getClassLoader().getResourceAsStream(zipPathInResources);
-                ZipInputStream zipInputStream = new ZipInputStream(inputStream, StandardCharsets.UTF_8)
+                InputStream inputStream = FileReadHelper.class.getClassLoader()
+                        .getResourceAsStream(zipPathInResources);
+                ZipInputStream zipInputStream = new ZipInputStream(
+                                inputStream,
+                                StandardCharsets.UTF_8
+                        )
         ) {
             ZipEntry entry;
 
@@ -29,7 +33,12 @@ public final class FileReadHelper {
                 if (entry.getName().equals(fileInZip)) {
 
                     // read from file
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(zipInputStream, StandardCharsets.UTF_8))) {
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(
+                                    zipInputStream,
+                                    StandardCharsets.UTF_8)
+                        )
+                    ) {
                         String line;
                         while ((line = reader.readLine()) != null) {
                             lines.add(line);
@@ -52,19 +61,29 @@ public final class FileReadHelper {
     // this is used instead of iterating through the single version of this method
     // because opening and closing a zip file is an expensive process
     // so this method stays in the zip until required files are read
-    public static Map<String, List<String>> readZipFilesFromResources(String zipPathInResources, Set<String> filesInZip, String fileExtension) {
+    public static Map<String, List<String>> readZipFilesFromResources(
+            String zipPathInResources,
+            Set<String> filesInZip,
+            String fileExtension
+    ) {
         Map<String, List<String>> fileContents = new HashMap<>();
 
         try {
             File zipFileOnDisk = new File(Objects.requireNonNull(
-                    FileReadHelper.class.getClassLoader().getResource(zipPathInResources)).toURI());
+                    FileReadHelper.class.getClassLoader()
+                            .getResource(zipPathInResources)).toURI());
             try (ZipFile zipFile = new ZipFile(zipFileOnDisk, StandardCharsets.UTF_8)) {
                 for (String file : filesInZip) {
                     String fullName = file + fileExtension;
                     ZipEntry entry = zipFile.getEntry(fullName);
                     if (entry != null) {
                         try (BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8))) {
+                                new InputStreamReader(
+                                        zipFile.getInputStream(entry),
+                                        StandardCharsets.UTF_8
+                                )
+                            )
+                        ) {
                             List<String> lines = new ArrayList<>();
                             String line;
                             while ((line = reader.readLine()) != null) {

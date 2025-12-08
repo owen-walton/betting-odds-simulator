@@ -70,7 +70,9 @@ if __name__ == "__main__":
 
             # print the averages row
             print(f"{'AVERAGE':<10} | {avg_elo:>15.6f} | {avg_rand:>15.6f} | {avg_model:>15.6f}")
-            print("==============================================================\n")
+            print("=====================" +
+                  "========================" +
+                  "=================\n")
 
             after = time.perf_counter()
             time = after - before

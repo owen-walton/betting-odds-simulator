@@ -37,7 +37,9 @@ public class CricSheetParser {
 
         Map<String, List<String>> allMatchJsons = FileReadHelper.readZipFilesFromResources(CRICSHEET_PATH, new HashSet<>(matchIDs), JSON_EXTENSION);
         for (String matchID : matchIDs) {
-            internationalCricketData.appendSchema(parseSingleMatch(matchID, allMatchJsons));
+            internationalCricketData.appendSchema(
+                    parseSingleMatch(matchID, allMatchJsons)
+            );
         }
 
         return internationalCricketData;
@@ -50,7 +52,9 @@ public class CricSheetParser {
     // If a match is unofficial or missing required fields, an empty schema is returned.
     private CricketMatchDataSchema parseSingleMatch(String matchID, Map<String, List<String>> allMatchJsons) {
 
-        Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(joinStringList(allMatchJsons.get(matchID)), Set.of("innings", "meta"));
+        Map<String, Object> matchInfoMap = ParseJSON.parseJsonToMap(
+                joinStringList(allMatchJsons.get(matchID)), Set.of("innings", "meta")
+        );
 
         // other formats like IT20 and ODM are unofficial matches which are to be disregarded and not returned
         // this is done at start of method to save unnecessary computation if returning nothing
@@ -94,23 +98,33 @@ public class CricSheetParser {
         VenueKey venueKey = Normaliser.normaliseVenueKey(new VenueKey(ground, city));
 
         // get match results
-        TeamKey tossWinningTeamKey = new TeamKey(Normaliser.normalise((String)ParseJSON.getValueFromMap("info/toss/winner", matchInfoMap)));
-        TossDecision tossDecision = switch ((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)) {
+        TeamKey tossWinningTeamKey = new TeamKey(
+                Normaliser.normalise(
+                        (String)ParseJSON.getValueFromMap("info/toss/winner", matchInfoMap)
+                )
+        );
+        TossDecision tossDecision = switch (
+                (String) ParseJSON.getValueFromMap ("info/toss/decision", matchInfoMap)
+                ) {
             case "bat" -> TossDecision.BAT;
             case "field" -> TossDecision.FIELD;
             default -> {
-                System.out.println((String)ParseJSON.getValueFromMap("info/toss/decision", matchInfoMap)
+                System.out.println( (String) ParseJSON.getValueFromMap ("info/toss/decision", matchInfoMap)
                         + " is not a valid toss decision.");
                 throw new RuntimeException();
             }
         };
 
-        String strResult = (String)ParseJSON.getValueFromMap("info/outcome/result", matchInfoMap);
+        String strResult = (String) ParseJSON.getValueFromMap( "info/outcome/result", matchInfoMap );
         Result result;
         TeamKey winningTeamKey;
         if (strResult == null) {
             result = Result.WIN;
-            winningTeamKey = new TeamKey(Normaliser.normalise((String)ParseJSON.getValueFromMap("info/outcome/winner", matchInfoMap)));
+            winningTeamKey = new TeamKey(
+                    Normaliser.normalise(
+                            (String)ParseJSON.getValueFromMap("info/outcome/winner", matchInfoMap)
+                    )
+            );
         } else {
             if (strResult.equalsIgnoreCase("tie")) {
                 String winner = (String) ParseJSON.getValueFromMap("info/outcome/eliminator", matchInfoMap);
@@ -134,16 +148,24 @@ public class CricSheetParser {
         Integer marginSize;
         MarginType marginType;
         if (result == Result.WIN) {
-            if (((ParseJSON.getValueFromMap("info/outcome/by/innings", matchInfoMap))) != null) {
-                marginSize = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/runs", matchInfoMap));
+            if (ParseJSON.getValueFromMap(
+                    "info/outcome/by/innings", matchInfoMap
+            ) != null) {
+                marginSize = (Integer) ParseJSON.getValueFromMap(
+                        "info/outcome/by/runs", matchInfoMap
+                );
                 marginType = MarginType.ONE_INNINGS_AND_RUNS;
             } else {
-                Integer wickets = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/wickets", matchInfoMap));
+                Integer wickets = (Integer) ParseJSON.getValueFromMap(
+                        "info/outcome/by/wickets", matchInfoMap
+                );
                 if (wickets != null) {
                     marginSize = wickets;
                     marginType = MarginType.WICKETS;
                 } else {
-                    marginSize = (Integer)(ParseJSON.getValueFromMap("info/outcome/by/runs", matchInfoMap));
+                    marginSize = (Integer) ParseJSON.getValueFromMap(
+                            "info/outcome/by/runs", matchInfoMap
+                    );
                     marginType = MarginType.RUNS;
                 }
             }

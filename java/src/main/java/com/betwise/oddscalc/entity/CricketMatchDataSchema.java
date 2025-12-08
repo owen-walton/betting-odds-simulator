@@ -45,9 +45,9 @@ public class CricketMatchDataSchema {
         this.matchTeams = matchTeams;
     }
 
-    //============================================================================
+    //==================================
     // Getters and Setters
-    //============================================================================
+    //==================================
     public List<Venue> getVenues() {
         return venues;
     }
@@ -96,9 +96,9 @@ public class CricketMatchDataSchema {
         this.matchTeams = matchTeams;
     }
 
-    //============================================================================
+    //=================================
     // Smart methods
-    //============================================================================
+    //=================================
 
     // takes in a Team object with the correct id,
     // anywhere that the TeamKey in the passed-in object is found within the schema,
@@ -107,16 +107,30 @@ public class CricketMatchDataSchema {
         String teamName = team.getName().trim().toLowerCase();
 
         for (MatchTeam matchTeam : getMatchTeams()) {
-            if (matchTeam.getTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
+            if (
+                    matchTeam.getTeamNaturalKey().name()
+                    .trim().toLowerCase()
+                    .equals(teamName)
+            ) {
                 matchTeam.setTeamID(team.getTeamID());
             }
         }
 
         for (MatchResult matchResult : getMatchResults()) {
-            if (matchResult.getWinningTeamNaturalKey() != null && matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
+            if (
+                    matchResult.getWinningTeamNaturalKey() != null
+                    &&
+                    matchResult.getWinningTeamNaturalKey().name()
+                            .trim().toLowerCase()
+                            .equals(teamName)
+            ) {
                 matchResult.setWinningTeamID(team.getTeamID());
             }
-            if (matchResult.getTossWinningTeamNaturalKey().name().trim().toLowerCase().equals(teamName)) {
+            if (
+                    matchResult.getTossWinningTeamNaturalKey().name()
+                    .trim().toLowerCase()
+                    .equals(teamName)
+            ) {
                 matchResult.setTossWinningTeamID(team.getTeamID());
             }
         }
@@ -126,7 +140,10 @@ public class CricketMatchDataSchema {
     // then this function is called to replace that team's name
     public void replaceTeamNameEverywhere(String newName, String oldName) {
         // safety check
-        if (newName == null || oldName == null || newName.isEmpty() || oldName.isEmpty()) {
+        if (
+                newName == null || oldName == null
+                        || newName.isEmpty() || oldName.isEmpty()
+        ) {
             return;
         }
 
@@ -151,12 +168,22 @@ public class CricketMatchDataSchema {
 
         // Update all MatchResult references
         for (MatchResult matchResult : getMatchResults()) {
-            if (matchResult.getWinningTeamNaturalKey() != null &&
-                    matchResult.getWinningTeamNaturalKey().name().trim().toLowerCase().equals(oldNameNorm)) {
+            if (
+                    matchResult.getWinningTeamNaturalKey() != null
+                            &&
+                    matchResult.getWinningTeamNaturalKey().name()
+                            .trim().toLowerCase()
+                            .equals(oldNameNorm)
+            ) {
                 matchResult.setWinningTeamNaturalKey(new TeamKey(newNameNorm));
             }
-            if (matchResult.getTossWinningTeamNaturalKey() != null &&
-                    matchResult.getTossWinningTeamNaturalKey().name().trim().toLowerCase().equals(oldNameNorm)) {
+            if (
+                    matchResult.getTossWinningTeamNaturalKey() != null
+                            &&
+                    matchResult.getTossWinningTeamNaturalKey().name()
+                            .trim().toLowerCase()
+                            .equals(oldNameNorm)
+            ) {
                 matchResult.setTossWinningTeamNaturalKey(new TeamKey(newNameNorm));
             }
         }
@@ -200,9 +227,9 @@ public class CricketMatchDataSchema {
         }
     }
 
-    //============================================================================
+    //========================================================
     // toString
-    //============================================================================
+    //========================================================
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("CricketMatchDataSchema {")

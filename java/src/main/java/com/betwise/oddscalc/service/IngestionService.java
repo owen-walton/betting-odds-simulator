@@ -72,7 +72,9 @@ public class IngestionService {
 
             System.out.println("Beginning parse");
             // create a temporary schema object to store the matches parsed
-            CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1));
+            CricketMatchDataSchema schema = cricAPIClient.parseAllMatchesWithin7DaysSince(
+                    cricketMatchDAO.getMostRecentMatchDate().toLocalDate().plusDays(1)
+            );
 
             // insert the temp schema to DB
             uploadCricketMatchDataSchema(schema);
@@ -121,8 +123,13 @@ public class IngestionService {
             // insert teams and venues
             TeamAliasMap teamAliasMap = new TeamAliasMap();
             for (Team team : schema.getTeams()) {
-                if (!team.getName().equals(teamAliasMap.aliasCheck(team.getName()))) {
-                    schema.replaceTeamNameEverywhere(teamAliasMap.aliasCheck(team.getName()), team.getName());
+                if (!team.getName().equals(
+                        teamAliasMap.aliasCheck(team.getName())
+                    )
+                ) {
+                    schema.replaceTeamNameEverywhere(
+                            teamAliasMap.aliasCheck(team.getName()), team.getName()
+                    );
                 }
             }
             teamDAO.bulkInsertIfNotExists(schema.getTeams());
@@ -137,13 +144,39 @@ public class IngestionService {
 
                 boolean found = false;
                 for (Venue c : new ArrayList<>(canonicalVenues)) {
-                    if (venueDeduplicator.isSameVenue(v.getGroundName(), v.getCity(), c.getGroundName(), c.getCity())) {
-                        if (venueDeduplicator.shouldReplace(v.getVenueKey(), c.getVenueKey())) {
+                    if (venueDeduplicator.isSameVenue
+                            (
+                            v.getGroundName(),
+                            v.getCity(),
+                            c.getGroundName(),
+                            c.getCity()
+                            )
+                    ) {
+                        if (venueDeduplicator.shouldReplace
+                                (
+                                        v.getVenueKey(),
+                                        c.getVenueKey()
+                                )
+                        ) {
                             canonicalVenues.remove(c);
-                            canonicalVenues.add(new Venue(c.getVenueID(), v.getVenueKey()));
-                            schemaKeyToCanonicalVenue.put(v.getVenueKey(), new Venue(c.getVenueID(), v.getVenueKey()));
+                            canonicalVenues.add(
+                                    new Venue(
+                                            c.getVenueID(),
+                                            v.getVenueKey()
+                                    )
+                            );
+                            schemaKeyToCanonicalVenue.put(
+                                    v.getVenueKey(),
+                                    new Venue(
+                                            c.getVenueID(),
+                                            v.getVenueKey()
+                                    )
+                            );
                         } else {
-                            schemaKeyToCanonicalVenue.put(v.getVenueKey(), c);
+                            schemaKeyToCanonicalVenue.put(
+                                    v.getVenueKey(),
+                                    c
+                            );
                         }
                         found = true;
                         break;
@@ -156,22 +189,36 @@ public class IngestionService {
                 }
             }
             // need to handle venue de duplication here
-            venueDAO.bulkInsertAndUpdate(new ArrayList<>(canonicalVenues));
+            venueDAO.bulkInsertAndUpdate(
+                    new ArrayList<>(canonicalVenues)
+            );
             // updateVenueKey uses natural venue key comparison in other tables and replaces the venueID in that table
             // so venues list must have the new ids but the old venue key before de duplication applied
-            List<Venue> trueIDVenues = venueDAO.getIDsIntoObjects(new ArrayList<>(schemaKeyToCanonicalVenue.values()));
+            List<Venue> trueIDVenues =
+                    venueDAO.getIDsIntoObjects(
+                            new ArrayList<>(schemaKeyToCanonicalVenue.values())
+                    );
             // overwrite venue ids that have changed from getIdsIntoObjects()
             for (Venue listVenue : trueIDVenues) {
                 for (Venue mapVenue : schemaKeyToCanonicalVenue.values()) {
-                    if (listVenue.getVenueKey().equals(mapVenue.getVenueKey())) {
+                    if (listVenue.getVenueKey().equals(
+                            mapVenue.getVenueKey()
+                        )
+                    ) {
                         mapVenue.setVenueID(listVenue.getVenueID()); // override ID
                         break; // since map is exclusive, stop after match
                     }
                 }
             }
 
-            for (Map.Entry<VenueKey, Venue> entry : schemaKeyToCanonicalVenue.entrySet()) {
-                schema.updateVenueKey(new Venue(entry.getValue().getVenueID(), entry.getKey()));
+            for (Map.Entry<VenueKey, Venue> entry :
+                    schemaKeyToCanonicalVenue.entrySet()) {
+                schema.updateVenueKey(
+                        new Venue(
+                        entry.getValue().getVenueID(),
+                        entry.getKey()
+                        )
+                );
             }
             matchDAO.bulkInsertIfNotExists(schema.getCricketMatches());
             resultDAO.bulkInsertIfNotExists(schema.getMatchResults());
